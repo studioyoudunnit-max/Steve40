@@ -265,88 +265,116 @@ function PlayerContent({ mode, me, team }) {
 
 // ─── FINALE ───────────────────────────────────────────────────────────────────
 
-export function FinaleScreen({ onBack }) {
-  const [reveal, setReveal] = useState(false);
-  const [fire, setFire] = useState(0);
+// Podium layout L→R: 8th, 6th, 4th, 2nd, 1st, 3rd, 5th, 7th (sorted indices)
+const DEMO_PODIUM_ORDER = [7, 5, 3, 1, 0, 2, 4, 6];
+const DEMO_BAR_HEIGHTS  = [48, 68, 95, 140, 210, 118, 84, 60];
+const DEMO_REVEAL_SEQ   = [0, 7, 1, 6, 2, 5, 3, 4];
 
-  useEffect(() => {
-    const t = setTimeout(() => { setReveal(true); setFire(f => f + 1); }, 1200);
-    return () => clearTimeout(t);
-  }, []);
+export function FinaleScreen({ onBack }) {
+  const [revealStep, setRevealStep] = useState(0);
+  const [confetti, setConfetti] = useState(0);
 
   const sorted = TEAMS
-    .map(t => ({ ...t, score: DEMO_TEAM_SCORES[t.id] || 0 }))
+    .map(t => ({
+      ...t,
+      score: DEMO_TEAM_SCORES[t.id] || 0,
+      members: DEMO_PLAYERS.filter(p => p.team === t.id),
+    }))
     .sort((a, b) => b.score - a.score);
   const winner = sorted[0];
-  const podium = sorted.slice(0, 3);
+  const showWinner = revealStep >= 8;
+
+  function startReveal() {
+    setRevealStep(0);
+    setConfetti(0);
+    let step = 0;
+    const tick = () => {
+      step += 1;
+      setRevealStep(step);
+      if (step === 8) {
+        setConfetti(c => c + 1);
+        setTimeout(() => setConfetti(c => c + 1), 250);
+        setTimeout(() => setConfetti(c => c + 1), 500);
+        setTimeout(() => setConfetti(c => c + 1), 850);
+      } else {
+        setConfetti(c => c + 1);
+        if (step < 8) setTimeout(tick, 900);
+      }
+    };
+    setTimeout(tick, 800);
+  }
+
+  useEffect(() => { startReveal(); }, []);
+
+  const revealedCols = new Set(DEMO_REVEAL_SEQ.slice(0, revealStep));
 
   return (
     <Stage>
-      <Confetti trigger={fire} />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      <Confetti trigger={confetti} />
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexShrink: 0 }}>
         <Btn kind="ghost" size="sm" onClick={onBack} icon="ic-back">Back to Hub</Btn>
         <MiniLogo subtitle="Final Results" />
-        <Btn kind="outline" size="sm" onClick={() => setFire(f => f + 1)} icon="ic-sparkle">Replay</Btn>
+        <Btn kind="outline" size="sm" onClick={startReveal} icon="ic-sparkle">Replay</Btn>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, maxWidth: 1100, margin: '0 auto', width: '100%' }}>
-        {!reveal ? (
-          <div style={{ textAlign: 'center', animation: 'pulse 1.2s ease-in-out infinite' }}>
-            <div className="display" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'var(--muted)' }}>Counting the votes…</div>
+      {/* Winner banner */}
+      <div style={{ overflow: 'hidden', maxHeight: showWinner ? 110 : 0, opacity: showWinner ? 1 : 0, transition: 'max-height .7s cubic-bezier(.34,1.4,.64,1), opacity .4s ease', flexShrink: 0, marginBottom: showWinner ? 6 : 0 }}>
+        <div style={{ textAlign: 'center', paddingBottom: 8, borderBottom: '1px solid var(--border)' }}>
+          <div className="mono" style={{ fontSize: '.7rem', color: 'var(--muted)', letterSpacing: '.2em', textTransform: 'uppercase', marginBottom: 2 }}>★ Steve's 40th Champion ★</div>
+          <div className="display" style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)', lineHeight: .95, fontWeight: 900, color: winner.color, animation: showWinner ? 'winner-pulse 1.5s ease-in-out infinite' : 'none' }}>
+            {winner.name.toUpperCase()}
           </div>
-        ) : (
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'float-up .5s ease-out', gap: 24 }}>
-            <div style={{ textAlign: 'center' }}>
-              <div className="mono" style={{ fontSize: '.85rem', color: 'var(--accent-4)', letterSpacing: 4, textTransform: 'uppercase', marginBottom: 12 }}>
-                ★ Steve's 40th Champion ★
-              </div>
-              <div className="display" style={{
-                fontSize: 'clamp(4rem, 12vw, 9rem)', lineHeight: 1,
-                background: `linear-gradient(135deg, ${winner.color}, var(--accent-4), var(--accent-1))`,
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                filter: `drop-shadow(0 0 30px ${winner.color})`,
-                marginBottom: 8,
-              }}>
-                {winner.name.toUpperCase()}
-              </div>
-              <div className="display mono" style={{ fontSize: '2.4rem', color: 'var(--text)' }}>
-                {winner.score.toLocaleString()} pts
-              </div>
-            </div>
-
-            <div style={{
-              display: 'grid', gridTemplateColumns: '1fr 1.3fr 1fr', gap: 14, alignItems: 'end',
-              width: '100%', maxWidth: 720,
-            }}>
-              {[1, 0, 2].map(i => {
-                const p = podium[i]; if (!p) return null;
-                const height = i === 0 ? 180 : i === 1 ? 130 : 110;
-                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
-                return (
-                  <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                    <TeamDot team={p} size={20} />
-                    <div style={{ fontWeight: 800, color: p.color, fontSize: '1.05rem' }}>{p.name} Team</div>
-                    <div className="display mono" style={{ fontSize: '1.4rem', color: 'var(--text)' }}>{p.score.toLocaleString()}</div>
-                    <div style={{
-                      width: '100%', height, borderRadius: 'var(--r-lg) var(--r-lg) 0 0',
-                      background: `linear-gradient(180deg, ${p.color}, color-mix(in oklab, ${p.color} 40%, #0a0a12))`,
-                      boxShadow: `0 0 40px color-mix(in oklab, ${p.color} 50%, transparent), inset 0 0 40px rgba(0,0,0,.3)`,
-                      display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 14,
-                      fontSize: '2rem',
-                    }}>
-                      {medal}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <Btn kind="outline" size="lg" icon="ic-sparkle">
-              Send highlights to everyone
-            </Btn>
-          </div>
-        )}
+          <div className="mono" style={{ fontSize: '.9rem', color: winner.color, opacity: .85, marginTop: 2 }}>{winner.score.toLocaleString()} pts</div>
+        </div>
       </div>
+
+      {/* Status */}
+      <div className="mono" style={{ textAlign: 'center', fontSize: '.72rem', color: revealStep > 0 ? 'var(--accent-4)' : 'var(--muted)', letterSpacing: '.08em', height: 16, marginBottom: 6, flexShrink: 0 }}>
+        {revealStep === 0 ? '★ RESULTS REVEAL ★'
+          : revealStep < 8 ? `${8 - revealStep} team${8 - revealStep !== 1 ? 's' : ''} remaining`
+          : `★ ${winner.name.toUpperCase()} wins Steve's 40th Faceoff! ★`}
+      </div>
+
+      {/* Podium */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, padding: '0 8px', minHeight: 0 }}>
+        {DEMO_PODIUM_ORDER.map((sortedIdx, colIdx) => {
+          const team = sorted[sortedIdx];
+          if (!team) return null;
+          const place = sortedIdx + 1;
+          const barH = DEMO_BAR_HEIGHTS[colIdx];
+          const revealed = revealedCols.has(colIdx);
+          const placeBorderColor = place === 1 ? 'var(--accent-4)' : place === 2 ? '#c0c0c0' : place === 3 ? '#cd7f32' : 'rgba(255,255,255,.15)';
+          const placeColor = place === 1 ? 'var(--accent-4)' : place === 2 ? '#d4d4d4' : place === 3 ? '#d4954a' : 'rgba(255,255,255,.75)';
+          return (
+            <div key={team.id} style={{ flex: 1, maxWidth: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: revealed ? 1 : 0, transform: revealed ? 'translateY(0)' : 'translateY(10px)', transition: 'opacity .45s .1s ease, transform .45s .1s ease' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, width: '100%', padding: '0 2px 5px' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '.58rem', fontWeight: 900, padding: '1px 6px', borderRadius: 99, background: place === 1 ? 'rgba(255,214,0,.15)' : 'rgba(0,0,0,.5)', border: `1.5px solid ${placeBorderColor}`, color: placeColor, letterSpacing: '.04em', marginBottom: 1 }}>
+                  #{place}
+                </div>
+                <TeamDot team={team} size={32} />
+                <div className="display" style={{ fontSize: '.7rem', fontWeight: 800, color: team.color, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
+                  {team.name}
+                </div>
+                <div className="mono" style={{ fontSize: '.62rem', color: team.color, opacity: .9 }}>
+                  {team.score.toLocaleString()} pts
+                </div>
+                <div style={{ fontSize: '.54rem', color: 'var(--text-2)', textAlign: 'center', lineHeight: 1.5, opacity: .7 }}>
+                  {team.members.map((p, i) => <span key={i} style={{ display: 'block' }}>{p.name}</span>)}
+                </div>
+              </div>
+              <div style={{ width: '100%', height: barH, borderRadius: '8px 8px 0 0', flexShrink: 0, background: `linear-gradient(180deg, ${team.color}, color-mix(in oklab, ${team.color} 55%, #0a0812))`, boxShadow: `0 0 20px color-mix(in oklab, ${team.color} 40%, transparent)`, transform: revealed ? 'scaleY(1)' : 'scaleY(0)', transformOrigin: 'bottom center', transition: 'transform .65s cubic-bezier(.34,1.5,.64,1)', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(255,255,255,.2) 0%, transparent 45%)', pointerEvents: 'none' }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Ground */}
+      <div style={{ height: 3, margin: '0 12px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent)', borderRadius: 2, flexShrink: 0 }} />
+      <div style={{ height: 18, flexShrink: 0 }} />
     </Stage>
   );
 }

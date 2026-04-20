@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { play } from './sounds.js';
 import { useGame, getSessionId } from './useGame.js';
 import { TEAMS, TRIVIA_QS, CELEB_ROUNDS, LIPSYNC_SONGS } from './constants.js';
-import { Logo, MiniLogo, Btn, Card, TeamChip, TeamDot } from './ui-primitives.jsx';
+import { Logo, MiniLogo, Btn, Card, TeamChip, TeamDot, TeamOrb } from './ui-primitives.jsx';
 
 // ─── Full-screen mobile wrapper (replaces Phone) ──────────────────────────────
 
@@ -112,12 +112,13 @@ function TeamRevealScreen({ assignedTeam, playerName, onDone }) {
           width: 150, height: 150, borderRadius: '50%', margin: '0 auto 20px',
           background: `radial-gradient(circle at 35% 35%, color-mix(in oklab, ${team.color} 65%, #fff), ${team.color})`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '3.8rem',
           boxShadow: `0 0 ${revealed ? '80px' : '36px'} color-mix(in oklab, ${team.color} ${revealed ? '65' : '45'}%, transparent)`,
           transition: revealed ? 'all 0.55s cubic-bezier(0.34,1.56,0.64,1)' : 'background 0.08s, box-shadow 0.08s',
           transform: revealed ? 'scale(1.12)' : 'scale(1)',
         }}>
-          {team.emoji}
+          <svg width={78} height={78} style={{ color: 'rgba(0,0,0,0.4)' }}>
+            <use href={`#${team.icon}`} />
+          </svg>
         </div>
 
         <div className="display" style={{
@@ -655,39 +656,55 @@ function PlayerSongpop({ me, state, send }) {
 // ─── Finale ───────────────────────────────────────────────────────────────────
 
 function PlayerFinale({ me, state }) {
+  const revealStep = state.revealStep || 0;
   const sorted = TEAMS.map(t => ({
     ...t,
     score: Object.values(state.players).filter(p => p.team === t.id).reduce((s, p) => s + (p.score || 0), 0),
   })).sort((a, b) => b.score - a.score);
+  // sorted[0]=1st … sorted[7]=8th
 
-  const myTeam = sorted.find(t => t.id === me.team);
-  const myRank = sorted.findIndex(t => t.id === me.team) + 1;
+  // Show teams that have been revealed (8th first), displayed 1st→8th top-to-bottom
+  const revealedTeams = sorted.slice(Math.max(0, sorted.length - revealStep));
+
+  const myTeam = sorted.find(t => t.id === me?.team);
+  const myRank = sorted.findIndex(t => t.id === me?.team) + 1;
+  const myRevealed = revealStep >= (9 - myRank);
 
   return (
     <Screen>
-      <div style={{ textAlign: 'center', marginBottom: 20 }}>
+      <div style={{ textAlign: 'center', marginBottom: 16 }}>
         <Logo size="md" />
+        <div className="mono" style={{ fontSize: '.7rem', color: 'var(--accent-4)', letterSpacing: 3, textTransform: 'uppercase', marginTop: 8 }}>★ Final Results ★</div>
       </div>
 
-      <div style={{ textAlign: 'center', marginBottom: 20 }}>
-        <div className="mono" style={{ fontSize: '.7rem', color: 'var(--accent-4)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8 }}>★ Final Results ★</div>
-        <div className="display" style={{ fontSize: '3rem', lineHeight: 1, color: myTeam.color, marginBottom: 6, textShadow: `0 0 30px ${myTeam.color}` }}>#{myRank}</div>
-        <div style={{ color: 'var(--text-2)', fontSize: '.9rem', marginBottom: 4 }}>
-          {myTeam.name} Team · <strong style={{ color: 'var(--text)' }}>{myTeam.score.toLocaleString()} pts</strong>
+      {revealStep === 0 ? (
+        <div style={{ textAlign: 'center', padding: '24px 0', animation: 'pulse 1.5s ease-in-out infinite' }}>
+          <div className="display" style={{ fontSize: '1.4rem', color: 'var(--muted)' }}>Waiting for reveal…</div>
         </div>
-        <div style={{ color: 'var(--muted)', fontSize: '.8rem' }}>Your contribution: {(me.score || 0).toLocaleString()} pts</div>
-      </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {revealedTeams.map(t => {
+            const rank = sorted.findIndex(s => s.id === t.id) + 1;
+            const isMe = t.id === me?.team;
+            return (
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: isMe ? `color-mix(in oklab, ${t.color} 14%, transparent)` : 'rgba(255,255,255,.03)', border: `1px solid ${isMe ? `color-mix(in oklab, ${t.color} 40%, transparent)` : 'var(--border-2)'}`, borderRadius: 12, animation: 'float-up .4s ease-out' }}>
+                <div className="display" style={{ minWidth: 24, color: rank === 1 ? 'var(--accent-4)' : 'var(--muted)', fontSize: '.95rem', textAlign: 'center' }}>{rank === 1 ? '★' : rank}</div>
+                <TeamDot team={t} size={12} />
+                <div style={{ flex: 1, fontWeight: 700, color: t.color, fontSize: '.9rem' }}>{t.name} Team</div>
+                <div className="mono" style={{ fontSize: '.9rem', color: 'var(--text)' }}>{t.score.toLocaleString()}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {sorted.slice(0, 5).map((t, i) => (
-          <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: t.id === me.team ? `color-mix(in oklab, ${t.color} 14%, transparent)` : 'rgba(255,255,255,.03)', border: `1px solid ${t.id === me.team ? `color-mix(in oklab, ${t.color} 40%, transparent)` : 'var(--border-2)'}`, borderRadius: 12 }}>
-            <div className="display" style={{ minWidth: 22, color: i === 0 ? 'var(--accent-4)' : 'var(--muted)', fontSize: '.95rem', textAlign: 'center' }}>{i === 0 ? '★' : i + 1}</div>
-            <TeamDot team={t} size={12} />
-            <div style={{ flex: 1, fontWeight: 700, color: t.color, fontSize: '.9rem' }}>{t.name} Team</div>
-            <div className="mono" style={{ fontSize: '.9rem', color: 'var(--text)' }}>{t.score.toLocaleString()}</div>
-          </div>
-        ))}
-      </div>
+      {myRevealed && myTeam && (
+        <div style={{ marginTop: 16, textAlign: 'center' }}>
+          <div className="display" style={{ fontSize: '2rem', color: myTeam.color, marginBottom: 4, textShadow: `0 0 20px ${myTeam.color}` }}>#{myRank}</div>
+          <div style={{ color: 'var(--text-2)', fontSize: '.85rem', marginBottom: 2 }}>{myTeam.name} Team · <strong style={{ color: 'var(--text)' }}>{myTeam.score.toLocaleString()} pts</strong></div>
+          <div style={{ color: 'var(--muted)', fontSize: '.78rem' }}>Your contribution: {(me?.score || 0).toLocaleString()} pts</div>
+        </div>
+      )}
     </Screen>
   );
 }
@@ -755,11 +772,22 @@ export default function PlayerApp({ init, onReset }) {
 
   const { gameState, connected, send } = useGame(false, handleMessage);
 
-  // Auto-join on every (re)connect
+  // Auto-join: for QR joins (init.roomCode is null) wait for gameState to arrive
+  // so we can use the live server room code.
+  const roomCodeToJoin = init.roomCode || gameState?.roomCode;
   useEffect(() => {
-    if (!connected) return;
-    send({ type: 'join', sessionId, name: init.name, roomCode: init.roomCode });
-  }, [connected]);
+    if (!connected || !roomCodeToJoin) return;
+    send({ type: 'join', sessionId, name: init.name, roomCode: roomCodeToJoin });
+  }, [connected, roomCodeToJoin]);
+
+  // If server room code changes (server restart / new game), boot manual-code joiners.
+  // QR joiners always get the live code so no mismatch is possible.
+  useEffect(() => {
+    if (!gameState?.roomCode || !init.roomCode) return;
+    if (gameState.roomCode !== init.roomCode) {
+      onReset('Room not found — get the latest code from the host.');
+    }
+  }, [gameState?.roomCode]);
 
   // Detect if kicked (was in game, now missing)
   useEffect(() => {

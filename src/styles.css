@@ -154,6 +154,10 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
   from { transform: translateY(16px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+@keyframes winner-pulse {
+  0%, 100% { filter: brightness(1)    drop-shadow(0 0 16px var(--winner-color, currentColor)); }
+  50%       { filter: brightness(1.3) drop-shadow(0 0 48px var(--winner-color, currentColor)); }
+}
 @keyframes glimmer {
   0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
   50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
@@ -161,6 +165,17 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 @keyframes wheel-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(1800deg); }
+}
+@keyframes sparkle-float {
+  0%   { transform: translate(0, 0) rotate(45deg) scale(1); opacity: 1; }
+  60%  { opacity: 0.85; }
+  100% { transform: translate(var(--tx, 0px), -200px) rotate(var(--rot, 360deg)) scale(0.1); opacity: 0; }
+}
+@keyframes lesbian-sweep {
+  0%   { transform: translateX(-100%); }
+  38%  { transform: translateX(0%); }
+  62%  { transform: translateX(0%); }
+  100% { transform: translateX(100%); }
 }
 
 /* Reduce motion */

@@ -43,6 +43,7 @@ function freshState() {
       placements: {},     // teamId -> place (1–8)
       awarded: false,
     },
+    revealStep: 0,        // 0 = nothing revealed, 8 = all revealed (host clicks to advance)
   };
 }
 
@@ -224,10 +225,12 @@ const server = Bun.serve({
 
         case 'join': {
           const { sessionId, name, roomCode } = msg;
+          if (!sessionId || !name) break;
           const existing = state.players[sessionId];
           // Validate room code for brand-new players
           if (!existing) {
-            if (!roomCode || roomCode.toUpperCase() !== state.roomCode) {
+            const code = (typeof roomCode === 'string' ? roomCode : '').trim().toUpperCase();
+            if (code !== state.roomCode) {
               sendTo(ws, { type: 'join_error', message: 'Wrong room code' });
               break;
             }
@@ -495,6 +498,15 @@ const server = Bun.serve({
         case 'host_finale': {
           if (client.role !== 'host') break;
           state.phase = 'finale';
+          state.revealStep = 0;
+          broadcastAll();
+          break;
+        }
+
+        case 'host_reveal_next': {
+          if (client.role !== 'host') break;
+          if (state.phase !== 'finale') break;
+          if (state.revealStep < 8) state.revealStep += 1;
           broadcastAll();
           break;
         }

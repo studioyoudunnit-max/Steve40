@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { TEAMS, DEMO_PLAYERS, TRIVIA_QS, CELEB_ROUNDS, LIPSYNC_SONGS } from './constants.js';
 import { Stage, GameHeader, Card, Btn, TimerBar, PointsPop, TeamDot, BeatPulse } from './ui-primitives.jsx';
 
@@ -140,6 +140,52 @@ export function TriviaScreen({ onBack, onNextGame }) {
 
 // ─── TWINK OR LESBIAN ─────────────────────────────────────────────────────────
 
+function TwinkSparkles({ seed }) {
+  const particles = useMemo(() => Array.from({ length: 28 }, (_, i) => {
+    const s = (seed * 31 + i * 137) % 1;
+    return {
+      id: i,
+      x: 5 + ((i * 9.3 + seed) % 90),
+      delay: (i * 0.057) % 0.9,
+      duration: 0.85 + (i * 0.073) % 0.65,
+      size: 6 + (i * 4.1) % 12,
+      color: ['#3d8eff','#c84bff','#ff80f0','#ffffff','#ffd700','#a855f7'][i % 6],
+      tx: ((i * 13.7) % 80) - 40,
+      rot: 180 + (i * 47) % 360,
+      shape: i % 3 === 0 ? '50%' : '2px',
+    };
+  }), [seed]);
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      {particles.map(p => (
+        <div key={p.id} style={{
+          position: 'absolute',
+          bottom: `${15 + (p.id * 3) % 45}%`,
+          left: `${p.x}%`,
+          width: p.size, height: p.size,
+          background: p.color,
+          borderRadius: p.shape,
+          '--tx': `${p.tx}px`,
+          '--rot': `${p.rot}deg`,
+          animation: `sparkle-float ${p.duration}s ${p.delay}s ease-out forwards`,
+          boxShadow: `0 0 ${p.size + 2}px ${p.color}`,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function LesbianSweep() {
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, pointerEvents: 'none',
+      background: 'linear-gradient(180deg, #8a1a00 0%, #c85000 18%, #ff9b55 36%, #ffffff 50%, #d462a6 68%, #a50062 84%, #5c0035 100%)',
+      animation: 'lesbian-sweep 1.5s cubic-bezier(.4,0,.6,1) forwards',
+    }} />
+  );
+}
+
 export function TwinkLesbianScreen({ onBack, onNextGame }) {
   const rounds = CELEB_ROUNDS;
   const [rIdx, setRIdx] = useState(0);
@@ -188,42 +234,44 @@ export function TwinkLesbianScreen({ onBack, onNextGame }) {
         right={<Btn kind="ghost" size="sm" onClick={next}>Skip →</Btn>}
       />
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <Card glow style={{ padding: '24px 28px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 28, alignItems: 'center' }}>
-          <div style={{
-            width: 180, height: 180, borderRadius: '50%',
-            background: 'conic-gradient(from 0deg, var(--accent-1), var(--accent-3), var(--accent-2), var(--accent-4), var(--accent-1))',
-            padding: 5, position: 'relative',
-          }}>
-            <div style={{
-              width: '100%', height: '100%', borderRadius: '50%',
-              background: `linear-gradient(135deg, color-mix(in oklab, ${r.hue} 40%, #1a1530), #0a0a12)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '4.5rem', fontFamily: 'var(--font-display)',
-              color: '#fff', textShadow: '0 0 24px rgba(0,0,0,.6)',
-            }}>
-              {r.initials}
-            </div>
-          </div>
-          <div>
-            <div className="mono" style={{ fontSize: '.72rem', color: 'var(--accent-3)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6 }}>The Subject</div>
-            <h2 className="display" style={{ fontSize: 'clamp(2.4rem, 5vw, 4rem)', lineHeight: 1, color: 'var(--text)', marginBottom: 10 }}>
-              {r.name}
-            </h2>
-            <div style={{ color: 'var(--text-2)', fontSize: '1rem', marginBottom: 14 }}>{r.hint}</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {r.tags.map(tag => (
-                <span key={tag} style={{
-                  padding: '4px 12px', borderRadius: 999,
-                  background: 'rgba(255,255,255,.05)', border: '1px solid var(--border-2)',
-                  fontSize: '.78rem', color: 'var(--muted)',
-                }}>{tag}</span>
-              ))}
-            </div>
-          </div>
-        </Card>
+      <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', gap: 14, minHeight: 0 }}>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, flex: 1 }}>
+        {/* IMAGE */}
+        <div style={{
+          position: 'relative', overflow: 'hidden',
+          borderRadius: 'var(--r-lg)',
+          flex: '1 1 0', minHeight: 180, maxHeight: 460,
+          background: '#0a0812',
+          boxShadow: 'var(--shadow-card)',
+        }}>
+          <img
+            src={r.questionImg}
+            alt=""
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover',
+              opacity: revealed ? 0 : 1,
+              transition: 'opacity 0.7s ease',
+            }}
+          />
+          <img
+            src={r.revealImg}
+            alt=""
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover',
+              opacity: revealed ? 1 : 0,
+              transition: 'opacity 0.7s ease',
+            }}
+          />
+          {revealed && correct === 'twink'   && <TwinkSparkles key={rIdx} seed={rIdx} />}
+          {revealed && correct === 'lesbian' && <LesbianSweep  key={rIdx} />}
+        </div>
+
+        {/* VOTING BUTTONS */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {[
             { key: 'twink',   label: 'Twink',   icon: 'ic-star-burst', color: '#3d8eff', grad: 'linear-gradient(135deg, #3d8eff, #c84bff)' },
             { key: 'lesbian', label: 'Lesbian', icon: 'ic-flame',      color: '#ff3cac', grad: 'linear-gradient(135deg, #ff3cac, #ff7c00)' },
@@ -238,7 +286,7 @@ export function TwinkLesbianScreen({ onBack, onNextGame }) {
                 disabled={revealed}
                 style={{
                   position: 'relative', overflow: 'hidden',
-                  padding: '30px 28px', minHeight: 180,
+                  padding: '20px 24px',
                   background: revealed
                     ? isCorrect ? opt.grad : 'rgba(255,255,255,.04)'
                     : vote === opt.key ? opt.grad : 'rgba(255,255,255,.04)',
@@ -253,20 +301,20 @@ export function TwinkLesbianScreen({ onBack, onNextGame }) {
               >
                 <div style={{
                   position: 'absolute', inset: 0, pointerEvents: 'none',
-                  background: `linear-gradient(90deg, color-mix(in oklab, ${opt.color} 16%, transparent) ${pct}%, transparent ${pct}%)`,
+                  background: `linear-gradient(90deg, color-mix(in oklab, ${opt.color} 18%, transparent) ${pct}%, transparent ${pct}%)`,
                   transition: 'background .3s',
                 }} />
-                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                  <svg width="44" height="44" style={{ color: revealed && isCorrect ? '#fff' : opt.color, filter: `drop-shadow(0 0 12px ${opt.color})` }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <svg width="32" height="32" style={{ color: isCorrect ? '#fff' : opt.color, filter: `drop-shadow(0 0 8px ${opt.color})`, flexShrink: 0 }}>
                     <use href={`#${opt.icon}`} />
                   </svg>
-                  <div className="display" style={{ fontSize: '2.4rem', lineHeight: 1 }}>{opt.label}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.85rem', color: 'var(--muted)' }}>
-                    <span className="mono" style={{ color: revealed && isCorrect ? '#fff' : opt.color, fontWeight: 800 }}>{Math.round(pct)}%</span>
-                    <span>of the room</span>
+                  <div className="display" style={{ fontSize: '1.9rem', lineHeight: 1 }}>{opt.label}</div>
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span className="mono" style={{ color: isCorrect ? '#fff' : opt.color, fontWeight: 800, fontSize: '1.1rem' }}>{Math.round(pct)}%</span>
+                    <span style={{ fontSize: '.78rem', color: 'var(--muted)' }}>of the room</span>
                   </div>
                   {isCorrect && (
-                    <div style={{ marginTop: 6, padding: '6px 14px', borderRadius: 999, background: 'rgba(255,255,255,.2)', fontSize: '.78rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase' }}>
+                    <div style={{ padding: '4px 12px', borderRadius: 999, background: 'rgba(255,255,255,.2)', fontSize: '.75rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase' }}>
                       ✓ Correct
                     </div>
                   )}
@@ -276,12 +324,14 @@ export function TwinkLesbianScreen({ onBack, onNextGame }) {
           })}
         </div>
 
+        {/* REVEAL FOOTER */}
         {revealed && (
-          <Card style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', animation: 'float-up .3s ease-out' }}>
-            <div style={{ color: 'var(--text-2)', fontSize: '.95rem', maxWidth: '70%' }}>
+          <Card style={{ padding: '14px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, animation: 'float-up .3s ease-out' }}>
+            <div style={{ color: 'var(--text-2)', fontSize: '.95rem' }}>
+              <strong style={{ color: 'var(--text)', marginRight: 6 }}>{r.name}.</strong>
               <strong style={{ color: 'var(--accent-3)' }}>Hot take:</strong> {r.reveal}
             </div>
-            <Btn kind="primary" size="md" onClick={next} icon="ic-arrow-right">
+            <Btn kind="primary" size="md" onClick={next} icon="ic-arrow-right" style={{ flexShrink: 0 }}>
               {rIdx === rounds.length - 1 ? 'Finish →' : 'Next →'}
             </Btn>
           </Card>

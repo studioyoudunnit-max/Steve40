@@ -4,7 +4,7 @@ import { useGame } from './useGame.js';
 import { TEAMS, TRIVIA_QS, CELEB_ROUNDS, LIPSYNC_SONGS } from './constants.js';
 import {
   Logo, MiniLogo, Btn, Card, Stage, GameHeader,
-  TimerBar, Confetti, PointsPop, TeamDot, TeamChip, BeatPulse, QRPlaceholder,
+  TimerBar, Confetti, PointsPop, TeamDot, TeamChip, TeamOrb, BeatPulse, QRPlaceholder,
 } from './ui-primitives.jsx';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -424,14 +424,15 @@ function GroupReveal({ groupA, groupB }) {
               borderRadius: '50%',
               background: `radial-gradient(circle at 35% 35%, color-mix(in oklab, ${team.color} 75%, #fff), ${team.color})`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.4rem',
               boxShadow: `0 0 22px color-mix(in oklab, ${team.color} 55%, transparent)`,
               transform: phase === 1
                 ? `translate(${offsets[i].tx}px, ${offsets[i].ty}px) rotate(${offsets[i].rot}deg)`
                 : 'translate(0,0) rotate(0deg)',
               transition: `transform ${0.35 + i * 0.07}s cubic-bezier(0.34,1.56,0.64,1)`,
               zIndex: 8 - i,
-            }}>{team.emoji}</div>
+            }}>
+              <svg width={30} height={30} style={{ color: 'rgba(0,0,0,0.45)' }}><use href={`#${team.icon}`} /></svg>
+            </div>
           ))}
         </div>
       </div>
@@ -451,7 +452,7 @@ function GroupReveal({ groupA, groupB }) {
               const team = TEAMS.find(t => t.id === id);
               return (
                 <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '11px 15px', background: `color-mix(in oklab, ${team.color} 11%, transparent)`, border: `1px solid color-mix(in oklab, ${team.color} 28%, transparent)`, borderRadius: 12 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: team.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>{team.emoji}</div>
+                  <TeamOrb team={team} size={38} />
                   <span style={{ fontWeight: 800, color: team.color, fontSize: '.95rem' }}>{team.name} Team</span>
                 </div>
               );
@@ -625,7 +626,7 @@ function HostLipsync({ state, send }) {
         {sorted.map((team, i) => (
           <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '20px 26px', background: i === 0 ? `linear-gradient(135deg, color-mix(in oklab, ${team.color} 22%, transparent), transparent)` : `color-mix(in oklab, ${team.color} 8%, transparent)`, border: `${i === 0 ? 2 : 1}px solid color-mix(in oklab, ${team.color} ${i === 0 ? 50 : 22}%, transparent)`, borderRadius: 16, animation: `float-up 0.4s ${i * 0.1}s ease-out both` }}>
             <span style={{ fontSize: '2rem' }}>{MEDALS[i]}</span>
-            <div style={{ width: 52, height: 52, borderRadius: '50%', background: team.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', boxShadow: `0 0 20px color-mix(in oklab, ${team.color} 50%, transparent)` }}>{team.emoji}</div>
+            <TeamOrb team={team} size={52} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, color: team.color, fontSize: '1.1rem' }}>{team.name} Team</div>
             </div>
@@ -686,7 +687,7 @@ function HostLipsync({ state, send }) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {teams.map(t => (
                       <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: `color-mix(in oklab, ${t.color} 10%, transparent)`, border: `1px solid color-mix(in oklab, ${t.color} 25%, transparent)`, borderRadius: 11 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: t.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>{t.emoji}</div>
+                        <TeamOrb team={t} size={36} />
                         <span style={{ fontWeight: 700, color: t.color }}>{t.name} Team</span>
                       </div>
                     ))}
@@ -740,7 +741,7 @@ function HostLipsync({ state, send }) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {teams.map(t => (
                       <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: `color-mix(in oklab, ${t.color} 10%, transparent)`, border: `1px solid color-mix(in oklab, ${t.color} 25%, transparent)`, borderRadius: 11 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: t.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>{t.emoji}</div>
+                        <TeamOrb team={t} size={36} />
                         <span style={{ fontWeight: 700, color: t.color }}>{t.name} Team</span>
                       </div>
                     ))}
@@ -874,7 +875,7 @@ function HostSongpop({ state, send }) {
               const assigned = placements[team.id];
               return (
                 <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', background: assigned ? `color-mix(in oklab, ${team.color} 12%, transparent)` : 'rgba(255,255,255,.03)', border: `1.5px solid ${assigned ? team.color : 'var(--border-2)'}`, borderRadius: 14, transition: 'all .2s' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: team.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>{team.emoji}</div>
+                  <TeamOrb team={team} size={40} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 800, color: team.color }}>{team.name} Team</div>
                     <div style={{ fontSize: '.78rem', color: 'var(--muted)' }}>
@@ -931,7 +932,7 @@ function HostSongpop({ state, send }) {
         {sortedResults.map((team, i) => (
           <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 24px', background: i === 0 ? `linear-gradient(135deg, color-mix(in oklab, ${team.color} 22%, transparent), transparent)` : `color-mix(in oklab, ${team.color} 8%, transparent)`, border: `${i < 3 ? 2 : 1}px solid color-mix(in oklab, ${team.color} ${i === 0 ? 55 : 22}%, transparent)`, borderRadius: 16, animation: `float-up 0.35s ${i * 0.06}s ease-out both` }}>
             <div style={{ fontSize: i < 3 ? '2rem' : '1.3rem', minWidth: 36, textAlign: 'center' }}>{PLACE_LABELS[team.place]}</div>
-            <div style={{ width: 46, height: 46, borderRadius: '50%', background: team.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', boxShadow: `0 0 18px color-mix(in oklab, ${team.color} 45%, transparent)` }}>{team.emoji}</div>
+            <TeamOrb team={team} size={46} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, color: team.color, fontSize: '1rem' }}>{team.name} Team</div>
             </div>
@@ -950,55 +951,117 @@ function HostSongpop({ state, send }) {
 
 // ─── Finale (host) ────────────────────────────────────────────────────────────
 
-function HostFinale({ state, send }) {
-  const [fire, setFire] = useState(0);
-  useEffect(() => { setFire(f => f + 1); }, []);
+// Podium layout L→R: 8th, 6th, 4th, 2nd, 1st, 3rd, 5th, 7th (sorted indices)
+const PODIUM_ORDER = [7, 5, 3, 1, 0, 2, 4, 6];
+// Bar heights per column L→R
+const PODIUM_HEIGHTS = [48, 68, 95, 140, 210, 118, 84, 60];
+// Which column index to reveal at each step (8th first → 1st last, alternating sides)
+const PODIUM_REVEAL_SEQ = [0, 7, 1, 6, 2, 5, 3, 4];
 
+function HostFinale({ state, send }) {
+  const [confetti, setConfetti] = useState(0);
+  const prevStep = useRef(0);
+  const revealStep = state.revealStep || 0;
   const sorted = teamScores(state.players);
   const winner = sorted[0];
-  const podium = sorted.slice(0, 3);
+  const showWinner = revealStep >= 8;
+
+  useEffect(() => {
+    if (revealStep > prevStep.current) {
+      if (revealStep === 8) {
+        setConfetti(c => c + 1);
+        setTimeout(() => setConfetti(c => c + 1), 250);
+        setTimeout(() => setConfetti(c => c + 1), 500);
+        setTimeout(() => setConfetti(c => c + 1), 850);
+      } else {
+        setConfetti(c => c + 1);
+      }
+      prevStep.current = revealStep;
+    }
+  }, [revealStep]);
+
+  const revealedCols = new Set(PODIUM_REVEAL_SEQ.slice(0, revealStep));
+
+  const revealLabel = revealStep === 0 ? 'Reveal 8th Place'
+    : revealStep < 7 ? `Reveal #${7 - revealStep}`
+    : revealStep === 7 ? 'Reveal the Winner! 🏆'
+    : '🎉 Champions Crowned!';
 
   return (
     <Stage>
-      <Confetti trigger={fire} />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      <Confetti trigger={confetti} />
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexShrink: 0 }}>
         <MiniLogo subtitle="Final Results" />
-        <div style={{ display: 'flex', gap: 10 }}>
-          <Btn kind="outline" size="sm" onClick={() => setFire(f => f + 1)} icon="ic-sparkle">Replay</Btn>
-          <Btn kind="ghost" size="sm" onClick={() => send({ type: 'host_reset' })}>New Game</Btn>
-        </div>
+        <Btn kind="ghost" size="sm" onClick={() => send({ type: 'host_reset' })}>New Game</Btn>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, maxWidth: 1100, margin: '0 auto', width: '100%' }}>
+      {/* Winner banner — slides in from top when 1st is revealed */}
+      <div style={{ overflow: 'hidden', maxHeight: showWinner ? 110 : 0, opacity: showWinner ? 1 : 0, transition: 'max-height .7s cubic-bezier(.34,1.4,.64,1), opacity .4s ease', flexShrink: 0, marginBottom: showWinner ? 6 : 0 }}>
         {winner && (
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'float-up .5s ease-out', gap: 24 }}>
-            <div style={{ textAlign: 'center' }}>
-              <div className="mono" style={{ fontSize: '.85rem', color: 'var(--accent-4)', letterSpacing: 4, textTransform: 'uppercase', marginBottom: 12 }}>★ Steve's 40th Champion ★</div>
-              <div className="display" style={{ fontSize: 'clamp(4rem, 12vw, 9rem)', lineHeight: 1, background: `linear-gradient(135deg, ${winner.color}, var(--accent-4), var(--accent-1))`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: `drop-shadow(0 0 30px ${winner.color})`, marginBottom: 8 }}>
-                {winner.name.toUpperCase()}
-              </div>
-              <div className="display mono" style={{ fontSize: '2.4rem', color: 'var(--text)' }}>{winner.score.toLocaleString()} pts</div>
+          <div style={{ textAlign: 'center', paddingBottom: 8, borderBottom: '1px solid var(--border)' }}>
+            <div className="mono" style={{ fontSize: '.7rem', color: 'var(--muted)', letterSpacing: '.2em', textTransform: 'uppercase', marginBottom: 2 }}>★ Steve's 40th Champion ★</div>
+            <div className="display" style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)', lineHeight: .95, fontWeight: 900, color: winner.color, animation: showWinner ? 'winner-pulse 1.5s ease-in-out infinite' : 'none' }}>
+              {winner.name.toUpperCase()}
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1fr', gap: 14, alignItems: 'end', width: '100%', maxWidth: 720 }}>
-              {[1, 0, 2].map(i => {
-                const p = podium[i]; if (!p) return null;
-                const height = i === 0 ? 180 : i === 1 ? 130 : 110;
-                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
-                return (
-                  <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                    <TeamDot team={p} size={20} />
-                    <div style={{ fontWeight: 800, color: p.color, fontSize: '1.05rem' }}>{p.name} Team</div>
-                    <div className="display mono" style={{ fontSize: '1.4rem', color: 'var(--text)' }}>{p.score.toLocaleString()}</div>
-                    <div style={{ width: '100%', height, borderRadius: 'var(--r-lg) var(--r-lg) 0 0', background: `linear-gradient(180deg, ${p.color}, color-mix(in oklab, ${p.color} 40%, #0a0a12))`, boxShadow: `0 0 40px color-mix(in oklab, ${p.color} 50%, transparent)`, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 14, fontSize: '2rem' }}>
-                      {medal}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <div className="mono" style={{ fontSize: '.9rem', color: winner.color, opacity: .85, marginTop: 2 }}>{winner.score.toLocaleString()} pts</div>
           </div>
         )}
+      </div>
+
+      {/* Status line */}
+      <div className="mono" style={{ textAlign: 'center', fontSize: '.72rem', color: revealStep > 0 ? 'var(--accent-4)' : 'var(--muted)', letterSpacing: '.08em', height: 16, marginBottom: 6, flexShrink: 0, transition: 'color .3s' }}>
+        {revealStep === 0 ? '★ RESULTS REVEAL — click to reveal 8th place ★'
+          : revealStep < 8 ? `${8 - revealStep} team${8 - revealStep !== 1 ? 's' : ''} remaining`
+          : `★ ${winner?.name.toUpperCase()} wins Steve's 40th Faceoff! ★`}
+      </div>
+
+      {/* Podium */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, padding: '0 8px', minHeight: 0 }}>
+        {PODIUM_ORDER.map((sortedIdx, colIdx) => {
+          const team = sorted[sortedIdx];
+          if (!team) return null;
+          const place = sortedIdx + 1;
+          const barH = PODIUM_HEIGHTS[colIdx];
+          const revealed = revealedCols.has(colIdx);
+          const placeBorderColor = place === 1 ? 'var(--accent-4)' : place === 2 ? '#c0c0c0' : place === 3 ? '#cd7f32' : 'rgba(255,255,255,.15)';
+          const placeColor = place === 1 ? 'var(--accent-4)' : place === 2 ? '#d4d4d4' : place === 3 ? '#d4954a' : 'rgba(255,255,255,.75)';
+          return (
+            <div key={team.id} style={{ flex: 1, maxWidth: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: revealed ? 1 : 0, transform: revealed ? 'translateY(0)' : 'translateY(10px)', transition: 'opacity .45s .1s ease, transform .45s .1s ease' }}>
+              {/* Team info card */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, width: '100%', padding: '0 2px 5px' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '.58rem', fontWeight: 900, padding: '1px 6px', borderRadius: 99, background: place === 1 ? 'rgba(255,214,0,.15)' : 'rgba(0,0,0,.5)', border: `1.5px solid ${placeBorderColor}`, color: placeColor, letterSpacing: '.04em', marginBottom: 1 }}>
+                  #{place}
+                </div>
+                <TeamDot team={team} size={32} />
+                <div className="display" style={{ fontSize: '.7rem', fontWeight: 800, color: team.color, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
+                  {team.name}
+                </div>
+                <div className="mono" style={{ fontSize: '.62rem', color: team.color, opacity: .9 }}>
+                  {team.score.toLocaleString()} pts
+                </div>
+                <div style={{ fontSize: '.54rem', color: 'var(--text-2)', textAlign: 'center', lineHeight: 1.5, opacity: .7 }}>
+                  {team.members.map((p, i) => <span key={i} style={{ display: 'block' }}>{p.name}</span>)}
+                </div>
+              </div>
+              {/* Bar */}
+              <div style={{ width: '100%', height: barH, borderRadius: '8px 8px 0 0', flexShrink: 0, background: `linear-gradient(180deg, ${team.color}, color-mix(in oklab, ${team.color} 55%, #0a0812))`, boxShadow: `0 0 20px color-mix(in oklab, ${team.color} 40%, transparent)`, transform: revealed ? 'scaleY(1)' : 'scaleY(0)', transformOrigin: 'bottom center', transition: 'transform .65s cubic-bezier(.34,1.5,.64,1)', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(255,255,255,.2) 0%, transparent 45%)', pointerEvents: 'none' }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Ground line */}
+      <div style={{ height: 3, margin: '0 12px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent)', borderRadius: 2, flexShrink: 0 }} />
+
+      {/* Controls */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 14, padding: '12px 0 18px', flexShrink: 0 }}>
+        <Btn kind="primary" size="lg" disabled={revealStep >= 8} onClick={() => send({ type: 'host_reveal_next' })}>
+          {revealLabel}
+        </Btn>
       </div>
     </Stage>
   );

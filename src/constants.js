@@ -1,12 +1,12 @@
 export const TEAMS = [
-  { id: 'red',    name: 'Red',    color: '#ff3b61', emoji: '🔴' },
-  { id: 'blue',   name: 'Blue',   color: '#3d8eff', emoji: '🔵' },
-  { id: 'green',  name: 'Green',  color: '#00e676', emoji: '🟢' },
-  { id: 'yellow', name: 'Yellow', color: '#ffd600', emoji: '🟡' },
-  { id: 'purple', name: 'Purple', color: '#c84bff', emoji: '🟣' },
-  { id: 'orange', name: 'Orange', color: '#ff7c00', emoji: '🟠' },
-  { id: 'pink',   name: 'Pink',   color: '#ff3cac', emoji: '💗' },
-  { id: 'teal',   name: 'Teal',   color: '#00e5ff', emoji: '🩵' },
+  { id: 'red',    name: 'Red',    color: '#ff3b61', icon: 'ti-crown'    },
+  { id: 'blue',   name: 'Blue',   color: '#3d8eff', icon: 'ti-diamond'  },
+  { id: 'green',  name: 'Green',  color: '#00e676', icon: 'ti-flame'    },
+  { id: 'yellow', name: 'Yellow', color: '#ffd600', icon: 'ti-bolt'     },
+  { id: 'purple', name: 'Purple', color: '#c84bff', icon: 'ti-moon'     },
+  { id: 'orange', name: 'Orange', color: '#ff7c00', icon: 'ti-cocktail' },
+  { id: 'pink',   name: 'Pink',   color: '#ff3cac', icon: 'ti-lips'     },
+  { id: 'teal',   name: 'Teal',   color: '#00e5ff', icon: 'ti-sparkle'  },
 ];
 
 export const DEMO_PLAYERS = [
@@ -74,36 +74,94 @@ export const TRIVIA_QS = [
 
 export const CELEB_ROUNDS = [
   {
-    name: "Timothée Chalamet", initials: "TC",
-    hint: "Dune. Wonka. The cheekbones.",
-    tags: ['actor', 'cheekbones', 'wet hair'], hue: '#3d4a7a',
+    name: "Timothée Chalamet",
+    initials: "TC", hue: '#3d8eff',
+    hint: "French-American actor. Bone structure could cut glass.",
+    tags: ['Actor', 'Gen Z icon', 'Cheekbones'],
     answer: 'twink',
     reveal: "Certified twink. The internet made it official in 2019.",
     trueTally: { twink: 78, lesbian: 22 },
   },
   {
-    name: "Kristen Stewart", initials: "KS",
-    hint: "Twilight to Spencer, full arc.",
-    tags: ['actor', 'flannel-adj', 'skater'], hue: '#4a3d5a',
+    name: "Kristen Stewart",
+    initials: "KS", hue: '#ff3cac',
+    hint: "You know her from Twilight. You know her vibe from everything since.",
+    tags: ['Actor', 'Indie darling', 'Flannel'],
     answer: 'lesbian',
     reveal: "Out and proud since 2017. Flannel optional.",
     trueTally: { twink: 14, lesbian: 86 },
   },
   {
-    name: "Harry Styles", initials: "HS",
-    hint: "Watermelon Sugar. Pearl necklace.",
-    tags: ['musician', 'boa wearer', 'genderfluid'], hue: '#7a5a3d',
+    name: "Harry Styles",
+    initials: "HS", hue: '#c84bff',
+    hint: "Ex-boy-bander turned solo icon. Known for bold fashion choices.",
+    tags: ['Musician', 'Fashion icon', 'Fishnet era'],
     answer: 'twink',
     reveal: "Twink-adjacent at minimum. The fishnet era settled it.",
     trueTally: { twink: 64, lesbian: 36 },
   },
   {
-    name: "Kate McKinnon", initials: "KM",
-    hint: "SNL. Barbie astronaut. That laugh.",
-    tags: ['comedian', 'chaotic', 'button-up'], hue: '#3d6a5a',
+    name: "Kate McKinnon",
+    initials: "KM", hue: '#ff3cac',
+    hint: "SNL legend. Has played every gay icon at least once.",
+    tags: ['Comedian', 'SNL', 'Gay icon'],
     answer: 'lesbian',
     reveal: "Out since forever. Patron saint of this game.",
     trueTally: { twink: 8, lesbian: 92 },
+  },
+  {
+    name: "Billy Porter",
+    initials: "BP", hue: '#ffd600',
+    hint: "Pose star. Wore a tuxedo gown to the Oscars and nobody blinked.",
+    tags: ['Actor', 'Singer', 'Fashion'],
+    answer: 'twink',
+    reveal: "The tuxedo gown at the Oscars said everything.",
+    trueTally: { twink: 72, lesbian: 28 },
+  },
+  {
+    name: "Janelle Monáe",
+    initials: "JM", hue: '#00e676',
+    hint: "Musician and actor. Dirty Computer changed things.",
+    tags: ['Musician', 'Actor', 'Pansexual icon'],
+    answer: 'lesbian',
+    reveal: "Pansexual and free. Dirty Computer was the coming out we needed.",
+    trueTally: { twink: 20, lesbian: 80 },
+  },
+  {
+    name: "Troye Sivan",
+    initials: "TS", hue: '#3d8eff',
+    hint: "Australian pop star. Rush was an era.",
+    tags: ['Musician', 'Australian', 'Pop star'],
+    answer: 'twink',
+    reveal: "Rush was basically the twink national anthem.",
+    trueTally: { twink: 88, lesbian: 12 },
+  },
+  {
+    name: "Tessa Thompson",
+    initials: "TT", hue: '#ff3cac',
+    hint: "Valkyrie in the MCU. Confirmed the vibes herself.",
+    tags: ['Actor', 'MCU', 'Valkyrie'],
+    answer: 'lesbian',
+    reveal: "Valkyrie was queer-coded for a reason. Thompson confirmed the vibes.",
+    trueTally: { twink: 18, lesbian: 82 },
+  },
+  {
+    name: "Lil Nas X",
+    initials: "LNX", hue: '#ff7c00',
+    hint: "Old Town Road to Montero. The Grammys performance said it all.",
+    tags: ['Musician', 'Rapper', 'Grammys'],
+    answer: 'twink',
+    reveal: "Gave Satan a lap dance at the Grammys. Peak twink behavior.",
+    trueTally: { twink: 82, lesbian: 18 },
+  },
+  {
+    name: "Hayley Kiyoko",
+    initials: "HK", hue: '#ff3cac',
+    hint: "Singer known as Lesbian Jesus. Not a nickname she disputes.",
+    tags: ['Musician', 'Lesbian Jesus', 'Pop'],
+    answer: 'lesbian',
+    reveal: "Lesbian Jesus herself. No debate.",
+    trueTally: { twink: 4, lesbian: 96 },
   },
 ];
 
@@ -119,4 +177,4 @@ export const LIPSYNC_SONGS = [
 ];
 
 export const ROOM_CODE = 'TEA40';
-export const JOIN_URL  = 'steve40.party';
+export const JOIN_URL  = 'steave-40.fly.dev';

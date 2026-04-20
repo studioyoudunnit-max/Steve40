@@ -27,6 +27,16 @@ export default function IconSprite() {
         <symbol id="ic-shape-sq" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></symbol>
         <symbol id="ic-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
         <symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+
+        {/* ── Team icons ── */}
+        <symbol id="ti-crown" viewBox="0 0 24 24"><path fill="currentColor" d="M2 21h20v-2L19.5 9l-3.5 5-4-8-4 8-3.5-5L2 19z"/></symbol>
+        <symbol id="ti-diamond" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2L22 12L12 22L2 12Z"/></symbol>
+        <symbol id="ti-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+        <symbol id="ti-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13 2L4.5 13.5H11L10 22l9.5-12H13.5z"/></symbol>
+        <symbol id="ti-moon" viewBox="0 0 24 24"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+        <symbol id="ti-cocktail" viewBox="0 0 24 24"><path fill="currentColor" d="M3 3L21 3L13.5 13L13.5 19L16 19L16 21L8 21L8 19L10.5 19L10.5 13Z"/></symbol>
+        <symbol id="ti-lips" viewBox="0 0 24 24"><path fill="currentColor" d="M3 12 Q6 6 9.5 8 Q11 9 12 9 Q13 9 14.5 8 Q18 6 21 12 Q17 13 12 13 Q7 13 3 12Z M3 12 Q7 13 12 13 Q17 13 21 12 Q19 18 12 18 Q5 18 3 12Z"/></symbol>
+        <symbol id="ti-sparkle" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"/></symbol>
       </defs>
     </svg>
   );

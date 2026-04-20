@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { TEAMS, ROOM_CODE } from './constants.js';
+import QRCode from 'react-qr-code';
+import { TEAMS, ROOM_CODE, JOIN_URL } from './constants.js';
 
 export function Logo({ size = 'md', glow = true }) {
   const sizes = {
@@ -275,13 +276,38 @@ export function PointsPop({ pts, shown, onDone }) {
 export function TeamDot({ team, size = 12 }) {
   const t = typeof team === 'string' ? TEAMS.find(x => x.id === team) : team;
   if (!t) return null;
+  const iconSize = Math.round(size * 0.58);
   return (
     <span style={{
-      display: 'inline-block', width: size, height: size, borderRadius: '50%',
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      width: size, height: size, borderRadius: '50%',
       background: t.color,
       boxShadow: `0 0 10px ${t.color}, 0 0 0 2px color-mix(in oklab, ${t.color} 30%, transparent)`,
       flexShrink: 0,
-    }} />
+    }}>
+      <svg width={iconSize} height={iconSize} style={{ color: 'rgba(0,0,0,0.45)' }}>
+        <use href={`#${t.icon}`} />
+      </svg>
+    </span>
+  );
+}
+
+export function TeamOrb({ team, size = 40 }) {
+  const t = typeof team === 'string' ? TEAMS.find(x => x.id === team) : team;
+  if (!t) return null;
+  const iconSize = Math.round(size * 0.52);
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: t.color,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+      boxShadow: `0 0 ${size * 0.4}px color-mix(in oklab, ${t.color} 50%, transparent)`,
+    }}>
+      <svg width={iconSize} height={iconSize} style={{ color: 'rgba(0,0,0,0.45)' }}>
+        <use href={`#${t.icon}`} />
+      </svg>
+    </div>
   );
 }
 
@@ -340,25 +366,21 @@ export function Sparks() {
 }
 
 export function QRPlaceholder({ size = 170 }) {
-  const cells = useMemo(() => {
-    const N = 25;
-    let seed = 42;
-    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-    const arr = Array.from({ length: N * N }, () => rnd() > 0.5);
-    const setFinder = (sx, sy) => {
-      for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) {
-        const on = y === 0 || y === 6 || x === 0 || x === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4);
-        arr[(sy + y) * N + (sx + x)] = on;
-      }
-    };
-    setFinder(0, 0); setFinder(N - 7, 0); setFinder(0, N - 7);
-    return arr;
-  }, []);
   return (
-    <svg width={size} height={size} viewBox="0 0 25 25" style={{ background: '#fff', borderRadius: 10, display: 'block' }}>
-      {cells.map((on, i) => on ? (
-        <rect key={i} x={i % 25} y={Math.floor(i / 25)} width={1} height={1} fill="#0a0a12" />
-      ) : null)}
-    </svg>
+    <div style={{
+      background: '#fff',
+      borderRadius: 10,
+      padding: 8,
+      display: 'inline-block',
+      lineHeight: 0,
+    }}>
+      <QRCode
+        value={`https://${JOIN_URL}/?join`}
+        size={size - 16}
+        bgColor="#ffffff"
+        fgColor="#0a0a12"
+        level="M"
+      />
+    </div>
   );
 }
