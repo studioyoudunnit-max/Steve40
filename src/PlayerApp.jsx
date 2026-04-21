@@ -327,14 +327,10 @@ function PlayerTwink({ me, state, send }) {
         <div className="mono" style={{ fontSize: '.65rem', color: 'var(--muted)', letterSpacing: 1.5 }}>R{twink.roundIdx + 1}/{CELEB_ROUNDS.length}</div>
       </div>
 
-      <div style={{ textAlign: 'center', marginBottom: 16 }}>
-        <div style={{ width: 100, height: 100, margin: '0 auto 10px', borderRadius: '50%', background: 'conic-gradient(from 0deg, var(--accent-1), var(--accent-3), var(--accent-2), var(--accent-4), var(--accent-1))', padding: 3 }}>
-          <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: `linear-gradient(135deg, color-mix(in oklab, ${r.hue} 40%, #1a1530), #0a0a12)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', fontFamily: 'var(--font-display)', color: '#fff' }}>
-            {r.initials}
-          </div>
-        </div>
-        <div className="display" style={{ fontSize: '1.4rem', color: 'var(--text)', marginBottom: 4 }}>{r.name}</div>
-        <div style={{ fontSize: '.8rem', color: 'var(--muted)' }}>{r.hint}</div>
+      <div style={{ position: 'relative', marginBottom: 16, borderRadius: 14, overflow: 'hidden', background: '#0a0812', minHeight: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src={r.questionImg} alt="" style={{ width: '100%', maxHeight: 200, objectFit: 'contain', opacity: twink.revealed ? 0 : 1, transition: 'opacity 0.7s ease', position: 'absolute', inset: 0, margin: 'auto' }} />
+        <img src={r.revealImg}   alt="" style={{ width: '100%', maxHeight: 200, objectFit: 'contain', opacity: twink.revealed ? 1 : 0, transition: 'opacity 0.7s ease', position: 'absolute', inset: 0, margin: 'auto' }} />
+        <div style={{ height: 200 }} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 10, flex: 1 }}>
@@ -368,7 +364,7 @@ function PlayerTwink({ me, state, send }) {
 
       {twink.revealed && (
         <div style={{ marginTop: 10, padding: 12, background: myVote === r.answer ? 'rgba(0,230,118,.1)' : 'rgba(255,59,97,.1)', border: `1px solid ${myVote === r.answer ? 'rgba(0,230,118,.3)' : 'rgba(255,59,97,.3)'}`, borderRadius: 10, textAlign: 'center', fontSize: '.82rem', color: myVote === r.answer ? '#00e676' : '#ff3b61', animation: 'float-up .3s ease-out' }}>
-          {myVote === r.answer ? `✓ Correct! +500 pts — ${r.reveal}` : `✗ It's ${r.answer} — ${r.reveal}`}
+          {myVote === r.answer ? `✓ Correct! +500 pts` : `✗ It's ${r.answer}`}
         </div>
       )}
     </Screen>

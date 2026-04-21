@@ -328,22 +328,10 @@ function HostTwink({ state, send }) {
       />
 
       <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <Card glow style={{ padding: '24px 28px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 28, alignItems: 'center' }}>
-          <div style={{ width: 180, height: 180, borderRadius: '50%', background: 'conic-gradient(from 0deg, var(--accent-1), var(--accent-3), var(--accent-2), var(--accent-4), var(--accent-1))', padding: 5 }}>
-            <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: `linear-gradient(135deg, color-mix(in oklab, ${r.hue} 40%, #1a1530), #0a0a12)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4.5rem', fontFamily: 'var(--font-display)', color: '#fff' }}>
-              {r.initials}
-            </div>
-          </div>
-          <div>
-            <div className="mono" style={{ fontSize: '.72rem', color: 'var(--accent-3)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6 }}>The Subject</div>
-            <h2 className="display" style={{ fontSize: 'clamp(2.4rem, 5vw, 4rem)', lineHeight: 1, color: 'var(--text)', marginBottom: 10 }}>{r.name}</h2>
-            <div style={{ color: 'var(--text-2)', fontSize: '1rem', marginBottom: 14 }}>{r.hint}</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {r.tags.map(tag => (
-                <span key={tag} style={{ padding: '4px 12px', borderRadius: 999, background: 'rgba(255,255,255,.05)', border: '1px solid var(--border-2)', fontSize: '.78rem', color: 'var(--muted)' }}>{tag}</span>
-              ))}
-            </div>
-          </div>
+        <Card glow style={{ padding: 0, overflow: 'hidden', position: 'relative', minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0812' }}>
+          <img src={r.questionImg} alt="" style={{ width: '100%', maxHeight: 360, objectFit: 'contain', borderRadius: 'var(--r-lg)', opacity: twink.revealed ? 0 : 1, transition: 'opacity 0.7s ease', position: 'absolute', inset: 0, margin: 'auto' }} />
+          <img src={r.revealImg}   alt="" style={{ width: '100%', maxHeight: 360, objectFit: 'contain', borderRadius: 'var(--r-lg)', opacity: twink.revealed ? 1 : 0, transition: 'opacity 0.7s ease', position: 'absolute', inset: 0, margin: 'auto' }} />
+          <div style={{ height: 360 }} />
         </Card>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, flex: 1 }}>
@@ -372,7 +360,7 @@ function HostTwink({ state, send }) {
         <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,.04)', border: '1px solid var(--border-2)', borderRadius: 'var(--r-lg)' }}>
           {twink.revealed ? (
             <div style={{ flex: 1, color: 'var(--text-2)', fontSize: '.95rem' }}>
-              <strong style={{ color: 'var(--accent-3)' }}>Hot take:</strong> {r.reveal}
+              Answer: <strong style={{ color: 'var(--accent-3)', textTransform: 'capitalize' }}>{r.answer}</strong>
             </div>
           ) : (
             <div style={{ flex: 1, color: 'var(--muted)', fontSize: '.9rem' }}>
