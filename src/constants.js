@@ -73,11 +73,9 @@ export const TRIVIA_QS = [
 ];
 
 export const CELEB_ROUNDS = [
-  { questionImg: '/twink/q1.jpg', revealImg: '/twink/r1.jpg', answer: 'twink'   },
-  { questionImg: '/twink/q2.jpg', revealImg: '/twink/r2.jpg', answer: 'lesbian' },
-  { questionImg: '/twink/q3.jpg', revealImg: '/twink/r3.jpg', answer: 'twink'   },
-  { questionImg: '/twink/q4.jpg', revealImg: '/twink/r4.jpg', answer: 'lesbian' },
-  { questionImg: '/twink/q5.jpg', revealImg: '/twink/r5.jpg', answer: 'lesbian' },
+  { questionImg: '/twink/Q1.jpg', revealImg: '/twink/R1.jpg', answer: 'twink'   },
+  { questionImg: '/twink/Q2.jpg', revealImg: '/twink/R2.jpg', answer: 'twink'   },
+  { questionImg: '/twink/Q3.jpg', revealImg: '/twink/R3.jpg', answer: 'twink'   },
 ];
 
 export const LIPSYNC_SONGS = [
