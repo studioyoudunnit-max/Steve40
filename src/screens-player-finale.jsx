@@ -265,10 +265,10 @@ function PlayerContent({ mode, me, team }) {
 
 // ─── FINALE ───────────────────────────────────────────────────────────────────
 
-// Podium layout L→R: 8th, 6th, 4th, 2nd, 1st, 3rd, 5th, 7th (sorted indices)
-const DEMO_PODIUM_ORDER = [7, 5, 3, 1, 0, 2, 4, 6];
-const DEMO_BAR_HEIGHTS  = [48, 68, 95, 140, 210, 118, 84, 60];
-const DEMO_REVEAL_SEQ   = [0, 7, 1, 6, 2, 5, 3, 4];
+// Podium layout L→R: 8th → 1st (ascending staircase)
+const DEMO_PODIUM_ORDER = [7, 6, 5, 4, 3, 2, 1, 0];
+const DEMO_BAR_HEIGHTS  = [48, 72, 98, 126, 157, 191, 228, 270];
+const DEMO_REVEAL_SEQ   = [0, 1, 2, 3, 4, 5, 6, 7];
 
 export function FinaleScreen({ onBack }) {
   const [revealStep, setRevealStep] = useState(0);
@@ -330,13 +330,6 @@ export function FinaleScreen({ onBack }) {
         </div>
       </div>
 
-      {/* Status */}
-      <div className="mono" style={{ textAlign: 'center', fontSize: '.72rem', color: revealStep > 0 ? 'var(--accent-4)' : 'var(--muted)', letterSpacing: '.08em', height: 16, marginBottom: 6, flexShrink: 0 }}>
-        {revealStep === 0 ? '★ RESULTS REVEAL ★'
-          : revealStep < 8 ? `${8 - revealStep} team${8 - revealStep !== 1 ? 's' : ''} remaining`
-          : `★ ${winner.name.toUpperCase()} wins Steve's 40th Faceoff! ★`}
-      </div>
-
       {/* Podium */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, padding: '0 8px', minHeight: 0 }}>
         {DEMO_PODIUM_ORDER.map((sortedIdx, colIdx) => {
@@ -348,19 +341,19 @@ export function FinaleScreen({ onBack }) {
           const placeBorderColor = place === 1 ? 'var(--accent-4)' : place === 2 ? '#c0c0c0' : place === 3 ? '#cd7f32' : 'rgba(255,255,255,.15)';
           const placeColor = place === 1 ? 'var(--accent-4)' : place === 2 ? '#d4d4d4' : place === 3 ? '#d4954a' : 'rgba(255,255,255,.75)';
           return (
-            <div key={team.id} style={{ flex: 1, maxWidth: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: revealed ? 1 : 0, transform: revealed ? 'translateY(0)' : 'translateY(10px)', transition: 'opacity .45s .1s ease, transform .45s .1s ease' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, width: '100%', padding: '0 2px 5px' }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '.58rem', fontWeight: 900, padding: '1px 6px', borderRadius: 99, background: place === 1 ? 'rgba(255,214,0,.15)' : 'rgba(0,0,0,.5)', border: `1.5px solid ${placeBorderColor}`, color: placeColor, letterSpacing: '.04em', marginBottom: 1 }}>
+            <div key={team.id} style={{ flex: 1, maxWidth: 160, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: revealed ? 1 : 0, transform: revealed ? 'translateY(0)' : 'translateY(10px)', transition: 'opacity .45s .1s ease, transform .45s .1s ease' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '100%', padding: '0 4px 8px', textAlign: 'center' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '.6rem', fontWeight: 900, padding: '1px 7px', borderRadius: 99, background: place === 1 ? 'rgba(255,214,0,.15)' : 'rgba(0,0,0,.5)', border: `1.5px solid ${placeBorderColor}`, color: placeColor, letterSpacing: '.04em', marginBottom: 2 }}>
                   #{place}
                 </div>
-                <TeamDot team={team} size={32} />
-                <div className="display" style={{ fontSize: '.7rem', fontWeight: 800, color: team.color, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
-                  {team.name}
+                <TeamDot team={team} size={30} />
+                <div className="display" style={{ fontSize: 'clamp(1rem, 2.2vw, 1.8rem)', fontWeight: 900, color: team.color, lineHeight: .95, letterSpacing: '-.01em', filter: `drop-shadow(0 0 12px ${team.color}88)` }}>
+                  {team.name.toUpperCase()}
                 </div>
-                <div className="mono" style={{ fontSize: '.62rem', color: team.color, opacity: .9 }}>
+                <div className="mono" style={{ fontSize: 'clamp(.6rem, 1.1vw, .85rem)', color: team.color, opacity: .85 }}>
                   {team.score.toLocaleString()} pts
                 </div>
-                <div style={{ fontSize: '.54rem', color: 'var(--text-2)', textAlign: 'center', lineHeight: 1.5, opacity: .7 }}>
+                <div style={{ fontSize: 'clamp(.52rem, .9vw, .7rem)', color: 'var(--text-2)', lineHeight: 1.5, opacity: .75 }}>
                   {team.members.map((p, i) => <span key={i} style={{ display: 'block' }}>{p.name}</span>)}
                 </div>
               </div>
