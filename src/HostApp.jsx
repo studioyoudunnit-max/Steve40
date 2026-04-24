@@ -197,6 +197,70 @@ function HostLobby({ state, send }) {
   );
 }
 
+// ─── Host drink modal ─────────────────────────────────────────────────────────
+
+function HostDrinkModal({ drinkers, nextLabel, onNext, onDismiss }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 50,
+      background: 'rgba(0,0,0,.7)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      animation: 'float-up .25s ease-out',
+    }}>
+      <div style={{
+        background: 'radial-gradient(ellipse at 50% 30%, #1a0030 0%, #08000f 100%)',
+        border: '1px solid rgba(255,59,97,.35)',
+        borderRadius: 28,
+        padding: '44px 56px',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', gap: 28,
+        boxShadow: '0 0 100px rgba(255,59,97,.2), 0 32px 80px rgba(0,0,0,.7)',
+        minWidth: 440, maxWidth: 660,
+        position: 'relative',
+      }}>
+        <button onClick={onDismiss} style={{
+          position: 'absolute', top: 14, right: 18,
+          background: 'none', border: 'none',
+          color: 'var(--muted)', fontSize: '1.1rem',
+          cursor: 'pointer', lineHeight: 1, padding: 4,
+        }}>✕</button>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+          {drinkers.map(p => {
+            const t = TEAMS.find(t => t.id === p.team);
+            return (
+              <div key={p.id} style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                padding: '7px 16px', borderRadius: 99,
+                background: `color-mix(in oklab, ${t?.color ?? '#fff'} 16%, transparent)`,
+                border: `1.5px solid color-mix(in oklab, ${t?.color ?? '#fff'} 40%, transparent)`,
+              }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: t?.color ?? '#fff', flexShrink: 0 }} />
+                <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="display" style={{
+          fontSize: 'clamp(5rem, 10vw, 8rem)',
+          background: 'linear-gradient(135deg, #ff3b61 0%, #ff7c00 25%, #ffd600 50%, #00e676 72%, #3d8eff 88%, #c84bff 100%)',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          lineHeight: 1, textAlign: 'center',
+          animation: 'tick .9s ease-in-out infinite',
+          filter: 'drop-shadow(0 0 32px rgba(255,59,97,.5))',
+        }}>
+          DRINK
+        </div>
+
+        <Btn kind="success" size="md" onClick={onNext} icon="ic-arrow-right">
+          {nextLabel}
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
 // ─── Trivia (host) ────────────────────────────────────────────────────────────
 
 function HostTrivia({ state, send }) {
@@ -207,6 +271,9 @@ function HostTrivia({ state, send }) {
   const colors = ['var(--accent-1)', 'var(--accent-2)', 'var(--accent-4)', 'var(--accent-3)'];
   const shapes = ['ic-shape-tri', 'ic-shape-dia', 'ic-shape-circ', 'ic-shape-sq'];
   const isLast = trivia.questionIdx === TRIVIA_QS.length - 1;
+  const [drinkDismissed, setDrinkDismissed] = useState(false);
+
+  useEffect(() => { setDrinkDismissed(false); }, [trivia.questionIdx, trivia.revealed]);
 
   useEffect(() => {
     if (trivia.timerLeft === 3 && !trivia.revealed) play('tick');
@@ -276,30 +343,19 @@ function HostTrivia({ state, send }) {
           })}
         </div>
 
-        {/* drinkers panel */}
-        {trivia.revealed && (() => {
+        {trivia.revealed && !drinkDismissed && (() => {
           const drinkers = players.filter(p => {
             const ans = trivia.answers[p.id];
             return !ans || ans.answerIdx !== q.correct;
           });
           if (!drinkers.length) return null;
           return (
-            <div style={{ marginTop: 16, padding: '14px 20px', background: 'rgba(255,59,97,.08)', border: '1px solid rgba(255,59,97,.3)', borderRadius: 'var(--r-lg)', animation: 'float-up .3s ease-out' }}>
-              <div className="mono" style={{ fontSize: '.65rem', color: '#ff3b61', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>
-                🍺 Drinking ({drinkers.length})
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {drinkers.map(p => {
-                  const t = TEAMS.find(t => t.id === p.team);
-                  return (
-                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 99, background: `color-mix(in oklab, ${t?.color ?? '#fff'} 14%, transparent)`, border: `1px solid color-mix(in oklab, ${t?.color ?? '#fff'} 35%, transparent)` }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: t?.color ?? '#fff', flexShrink: 0 }} />
-                      <span style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <HostDrinkModal
+              drinkers={drinkers}
+              nextLabel={isLast ? 'Back to Hub →' : 'Next Question →'}
+              onNext={() => send({ type: 'host_next_trivia' })}
+              onDismiss={() => setDrinkDismissed(true)}
+            />
           );
         })()}
 
@@ -339,6 +395,9 @@ function HostTwink({ state, send }) {
   const r = CELEB_ROUNDS[twink.roundIdx];
   const players = Object.values(state.players);
   const isLast = twink.roundIdx === CELEB_ROUNDS.length - 1;
+  const [drinkDismissed, setDrinkDismissed] = useState(false);
+
+  useEffect(() => { setDrinkDismissed(false); }, [twink.roundIdx, twink.revealed]);
 
   const totalVotes = Object.keys(twink.votes).length;
   const twinkCount  = Object.values(twink.votes).filter(v => v === 'twink').length;
@@ -384,29 +443,19 @@ function HostTwink({ state, send }) {
           })}
         </div>
 
-        {twink.revealed && (() => {
+        {twink.revealed && !drinkDismissed && (() => {
           const drinkers = players.filter(p => {
             const v = twink.votes[p.id];
             return !v || v !== r.answer;
           });
           if (!drinkers.length) return null;
           return (
-            <div style={{ padding: '14px 20px', background: 'rgba(255,59,97,.08)', border: '1px solid rgba(255,59,97,.3)', borderRadius: 'var(--r-lg)', animation: 'float-up .3s ease-out' }}>
-              <div className="mono" style={{ fontSize: '.65rem', color: '#ff3b61', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>
-                🍺 Drinking ({drinkers.length})
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {drinkers.map(p => {
-                  const t = TEAMS.find(t => t.id === p.team);
-                  return (
-                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 99, background: `color-mix(in oklab, ${t?.color ?? '#fff'} 14%, transparent)`, border: `1px solid color-mix(in oklab, ${t?.color ?? '#fff'} 35%, transparent)` }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: t?.color ?? '#fff', flexShrink: 0 }} />
-                      <span style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <HostDrinkModal
+              drinkers={drinkers}
+              nextLabel={isLast ? 'Back to Hub →' : 'Next Round →'}
+              onNext={() => send({ type: 'host_next_twink' })}
+              onDismiss={() => setDrinkDismissed(true)}
+            />
           );
         })()}
 
