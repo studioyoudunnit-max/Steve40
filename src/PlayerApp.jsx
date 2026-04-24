@@ -220,6 +220,49 @@ function LobbyScreen({ me, state }) {
   );
 }
 
+// ─── Drink overlay ────────────────────────────────────────────────────────────
+
+function DrinkOverlay({ onDismiss }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 999,
+      background: 'radial-gradient(ellipse at 50% 40%, #1a0030 0%, #08000f 100%)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: 36, padding: 32,
+      animation: 'float-up .25s ease-out',
+    }}>
+      <div className="display" style={{
+        fontSize: 'clamp(5.5rem, 24vw, 9rem)',
+        background: 'linear-gradient(135deg, #ff3b61 0%, #ff7c00 25%, #ffd600 50%, #00e676 72%, #3d8eff 88%, #c84bff 100%)',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+        lineHeight: 1, textAlign: 'center',
+        animation: 'tick .9s ease-in-out infinite',
+        filter: 'drop-shadow(0 0 24px rgba(255,59,97,.6))',
+      }}>
+        DRINK
+      </div>
+      <button onClick={onDismiss} style={{
+        padding: '18px 52px', borderRadius: 99,
+        background: 'linear-gradient(135deg, #3d8eff, #c84bff)',
+        border: '2px solid rgba(255,255,255,.25)',
+        color: '#fff', fontSize: '1.15rem', fontWeight: 800,
+        cursor: 'pointer', fontFamily: 'var(--font-display)',
+        letterSpacing: 1,
+        boxShadow: '0 0 40px rgba(200,75,255,.5), 0 8px 32px rgba(0,0,0,.5)',
+        transition: 'transform .12s',
+      }}
+        onMouseDown={e => e.currentTarget.style.transform = 'scale(.96)'}
+        onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+        onTouchStart={e => e.currentTarget.style.transform = 'scale(.96)'}
+        onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; onDismiss(); }}
+      >
+        I drank
+      </button>
+    </div>
+  );
+}
+
 // ─── Trivia ───────────────────────────────────────────────────────────────────
 
 function PlayerTrivia({ me, state, send }) {
@@ -229,12 +272,13 @@ function PlayerTrivia({ me, state, send }) {
   const colors = ['var(--accent-1)', 'var(--accent-2)', 'var(--accent-4)', 'var(--accent-3)'];
   const shapes = ['ic-shape-tri', 'ic-shape-dia', 'ic-shape-circ', 'ic-shape-sq'];
   const team = TEAMS.find(t => t.id === me.team);
+  const [showDrink, setShowDrink] = useState(false);
 
   useEffect(() => {
-    if (!trivia.revealed) return;
+    if (!trivia.revealed) { setShowDrink(false); return; }
     if (myAnswer?.answerIdx === q.correct) play('correct');
-    else if (myAnswer) play('wrong');
-  }, [trivia.revealed]);
+    else { play('wrong'); setShowDrink(true); }
+  }, [trivia.revealed, trivia.questionIdx]);
 
   const pick = (i) => {
     if (myAnswer || trivia.revealed) return;
@@ -242,6 +286,8 @@ function PlayerTrivia({ me, state, send }) {
   };
 
   return (
+    <>
+      {showDrink && <DrinkOverlay onDismiss={() => setShowDrink(false)} />}
     <Screen>
       <div style={{ marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <TeamChip team={team} />
@@ -298,6 +344,7 @@ function PlayerTrivia({ me, state, send }) {
         {!trivia.revealed && !myAnswer && <span>Faster answers = more points</span>}
       </div>
     </Screen>
+    </>
   );
 }
 
@@ -308,6 +355,7 @@ function PlayerTwink({ me, state, send }) {
   const r = CELEB_ROUNDS[twink.roundIdx];
   const myVote = twink.votes?.[me.id];
   const team = TEAMS.find(t => t.id === me.team);
+  const [showDrink, setShowDrink] = useState(false);
 
   const twinkCount = Object.values(twink.votes || {}).filter(v => v === 'twink').length;
   const lesbCount  = Object.values(twink.votes || {}).filter(v => v === 'lesbian').length;
@@ -315,12 +363,19 @@ function PlayerTwink({ me, state, send }) {
   const twinkPct = totalVotes ? (twinkCount / totalVotes) * 100 : 0;
   const lesbPct  = totalVotes ? (lesbCount  / totalVotes) * 100 : 0;
 
+  useEffect(() => {
+    if (!twink.revealed) { setShowDrink(false); return; }
+    if (myVote !== r.answer) setShowDrink(true);
+  }, [twink.revealed, twink.roundIdx]);
+
   const vote = (v) => {
     if (myVote || twink.revealed) return;
     send({ type: 'twink_vote', vote: v });
   };
 
   return (
+    <>
+      {showDrink && <DrinkOverlay onDismiss={() => setShowDrink(false)} />}
     <Screen>
       <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <TeamChip team={team} />
@@ -368,6 +423,7 @@ function PlayerTwink({ me, state, send }) {
         </div>
       )}
     </Screen>
+    </>
   );
 }
 

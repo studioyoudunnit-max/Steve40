@@ -276,6 +276,33 @@ function HostTrivia({ state, send }) {
           })}
         </div>
 
+        {/* drinkers panel */}
+        {trivia.revealed && (() => {
+          const drinkers = players.filter(p => {
+            const ans = trivia.answers[p.id];
+            return !ans || ans.answerIdx !== q.correct;
+          });
+          if (!drinkers.length) return null;
+          return (
+            <div style={{ marginTop: 16, padding: '14px 20px', background: 'rgba(255,59,97,.08)', border: '1px solid rgba(255,59,97,.3)', borderRadius: 'var(--r-lg)', animation: 'float-up .3s ease-out' }}>
+              <div className="mono" style={{ fontSize: '.65rem', color: '#ff3b61', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>
+                🍺 Drinking ({drinkers.length})
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {drinkers.map(p => {
+                  const t = TEAMS.find(t => t.id === p.team);
+                  return (
+                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 99, background: `color-mix(in oklab, ${t?.color ?? '#fff'} 14%, transparent)`, border: `1px solid color-mix(in oklab, ${t?.color ?? '#fff'} 35%, transparent)` }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: t?.color ?? '#fff', flexShrink: 0 }} />
+                      <span style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* status bar */}
         <div style={{ marginTop: 20, padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: trivia.revealed ? 'rgba(0,230,118,.1)' : 'rgba(255,255,255,.04)', border: `1px solid ${trivia.revealed ? 'rgba(0,230,118,.3)' : 'var(--border-2)'}`, borderRadius: 'var(--r-lg)', animation: trivia.revealed ? 'float-up .3s ease-out' : 'none' }}>
           {trivia.revealed ? (
@@ -357,6 +384,32 @@ function HostTwink({ state, send }) {
           })}
         </div>
 
+        {twink.revealed && (() => {
+          const drinkers = players.filter(p => {
+            const v = twink.votes[p.id];
+            return !v || v !== r.answer;
+          });
+          if (!drinkers.length) return null;
+          return (
+            <div style={{ padding: '14px 20px', background: 'rgba(255,59,97,.08)', border: '1px solid rgba(255,59,97,.3)', borderRadius: 'var(--r-lg)', animation: 'float-up .3s ease-out' }}>
+              <div className="mono" style={{ fontSize: '.65rem', color: '#ff3b61', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>
+                🍺 Drinking ({drinkers.length})
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {drinkers.map(p => {
+                  const t = TEAMS.find(t => t.id === p.team);
+                  return (
+                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 99, background: `color-mix(in oklab, ${t?.color ?? '#fff'} 14%, transparent)`, border: `1px solid color-mix(in oklab, ${t?.color ?? '#fff'} 35%, transparent)` }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: t?.color ?? '#fff', flexShrink: 0 }} />
+                      <span style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,.04)', border: '1px solid var(--border-2)', borderRadius: 'var(--r-lg)' }}>
           {twink.revealed ? (
             <div style={{ flex: 1, color: 'var(--text-2)', fontSize: '.95rem' }}>
@@ -381,73 +434,121 @@ function HostTwink({ state, send }) {
 
 // ─── Group Reveal animation ───────────────────────────────────────────────────
 
-function GroupReveal({ groupA, groupB }) {
-  const [phase, setPhase] = useState(0); // 0=stacked 1=scatter 2=split
-  const offsets = useRef([...Array(8)].map(() => ({
-    tx: (Math.random() - 0.5) * 300,
-    ty: (Math.random() - 0.5) * 110,
-    rot: (Math.random() - 0.5) * 38,
-  }))).current;
+function GroupReveal({ groupA, groupB, onContinue }) {
+  const [phase, setPhase] = useState(0); // 0=row 1=shuffle 2=split 3=button
+  const ORB = 54;
+  const W = 660;
+  const H = 320;
+
+  const shuffleOffsets = useRef(
+    [...Array(8)].map(() => ({
+      dx: (Math.random() - 0.5) * 160,
+      dy: (Math.random() - 0.5) * 90,
+      rot: (Math.random() - 0.5) * 28,
+    }))
+  ).current;
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 250);
-    const t2 = setTimeout(() => setPhase(2), 2200);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const t1 = setTimeout(() => setPhase(1), 400);
+    const t2 = setTimeout(() => setPhase(2), 1600);
+    const t3 = setTimeout(() => setPhase(3), 3200);
+    return () => [t1, t2, t3].forEach(clearTimeout);
   }, []);
 
   const allIds = [...groupA, ...groupB];
   const allTeams = allIds.map(id => TEAMS.find(t => t.id === id));
 
-  if (phase < 2) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 220, gap: 16 }}>
-        <div className="mono" style={{ letterSpacing: 4, color: 'var(--muted)', fontSize: '.75rem', animation: 'pulse 0.8s ease-in-out infinite' }}>
-          {phase === 0 ? 'DRAWING GROUPS…' : 'SHUFFLING…'}
-        </div>
-        <div style={{ position: 'relative', width: 340, height: 160 }}>
-          {allTeams.map((team, i) => (
-            <div key={team.id} style={{
-              position: 'absolute', top: '50%', left: '50%',
-              width: 58, height: 58, marginTop: -29, marginLeft: -29,
-              borderRadius: '50%',
-              background: `radial-gradient(circle at 35% 35%, color-mix(in oklab, ${team.color} 75%, #fff), ${team.color})`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 22px color-mix(in oklab, ${team.color} 55%, transparent)`,
-              transform: phase === 1
-                ? `translate(${offsets[i].tx}px, ${offsets[i].ty}px) rotate(${offsets[i].rot}deg)`
-                : 'translate(0,0) rotate(0deg)',
-              transition: `transform ${0.35 + i * 0.07}s cubic-bezier(0.34,1.56,0.64,1)`,
-              zIndex: 8 - i,
-            }}>
-              <svg width={30} height={30} style={{ color: 'rgba(0,0,0,0.45)' }}><use href={`#${team.icon}`} /></svg>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const getPos = (i) => {
+    const isA = i < 4;
+    const subIdx = isA ? i : i - 4;
+    const rowX = (i / 7) * (W - ORB);
+    const rowY = (H - ORB) / 2;
+    if (phase <= 0) return { x: rowX, y: rowY, rot: 0 };
+    if (phase === 1) return {
+      x: rowX + shuffleOffsets[i].dx,
+      y: rowY + shuffleOffsets[i].dy,
+      rot: shuffleOffsets[i].rot,
+    };
+    return {
+      x: isA ? 30 : W - ORB - 30,
+      y: 50 + subIdx * 66,
+      rot: 0,
+    };
+  };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-      {[
-        { label: 'Group A · Performs First', ids: groupA, color: 'var(--accent-1)', delay: '0s' },
-        { label: 'Group B · Performs Second', ids: groupB, color: 'var(--accent-2)', delay: '0.18s' },
-      ].map(({ label, ids, color, delay }) => (
-        <Card key={label} glow style={{ padding: 22, animation: `float-up 0.5s ${delay} ease-out both` }}>
-          <div className="mono" style={{ fontSize: '.68rem', color, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 14 }}>{label}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {ids.map(id => {
-              const team = TEAMS.find(t => t.id === id);
-              return (
-                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '11px 15px', background: `color-mix(in oklab, ${team.color} 11%, transparent)`, border: `1px solid color-mix(in oklab, ${team.color} 28%, transparent)`, borderRadius: 12 }}>
-                  <TeamOrb team={team} size={38} />
-                  <span style={{ fontWeight: 800, color: team.color, fontSize: '.95rem' }}>{team.name} Team</span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+      <div className="mono" style={{
+        letterSpacing: 4, color: 'var(--muted)', fontSize: '.75rem',
+        animation: phase < 2 ? 'pulse 0.8s ease-in-out infinite' : 'none',
+      }}>
+        {phase < 2 ? 'DRAWING GROUPS…' : 'GROUPS CONFIRMED'}
+      </div>
+
+      <div style={{ position: 'relative', width: W, height: H, maxWidth: '100%' }}>
+        {phase >= 2 && (
+          <>
+            <div className="mono" style={{
+              position: 'absolute', left: 30, top: 8,
+              fontSize: '.65rem', color: 'var(--accent-1)',
+              letterSpacing: 3, textTransform: 'uppercase',
+              animation: 'float-up 0.4s ease-out',
+            }}>Group A · Performs First</div>
+            <div className="mono" style={{
+              position: 'absolute', right: 30, top: 8,
+              fontSize: '.65rem', color: 'var(--accent-2)',
+              letterSpacing: 3, textTransform: 'uppercase', textAlign: 'right',
+              animation: 'float-up 0.4s ease-out',
+            }}>Group B · Performs Second</div>
+          </>
+        )}
+
+        {allTeams.map((team, i) => {
+          const isA = i < 4;
+          const pos = getPos(i);
+          return (
+            <div key={team.id} style={{
+              position: 'absolute', left: 0, top: 0,
+              width: ORB, height: ORB,
+              transform: `translate(${pos.x}px, ${pos.y}px) rotate(${pos.rot}deg)`,
+              transition: phase === 0 ? 'none' : `transform ${0.35 + i * 0.05}s cubic-bezier(0.34,1.56,0.64,1)`,
+            }}>
+              <div style={{
+                width: ORB, height: ORB, borderRadius: '50%',
+                background: `radial-gradient(circle at 35% 35%, color-mix(in oklab, ${team.color} 75%, #fff), ${team.color})`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: `0 0 18px color-mix(in oklab, ${team.color} 55%, transparent)`,
+              }}>
+                <svg width={24} height={24} style={{ color: 'rgba(0,0,0,0.45)' }}>
+                  <use href={`#${team.icon}`} />
+                </svg>
+              </div>
+              {phase >= 2 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '50%', transform: 'translateY(-50%)',
+                  ...(isA ? { left: ORB + 10 } : { right: ORB + 10 }),
+                  whiteSpace: 'nowrap',
+                  fontWeight: 700,
+                  color: team.color,
+                  fontSize: '.88rem',
+                  animation: 'float-up 0.3s ease-out',
+                }}>
+                  {team.name} Team
                 </div>
-              );
-            })}
-          </div>
-        </Card>
-      ))}
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {phase >= 3 && (
+        <div style={{ animation: 'float-up 0.4s ease-out' }}>
+          <Btn kind="primary" size="lg" onClick={onContinue} icon="ic-mic">
+            Pick Group A's Song →
+          </Btn>
+        </div>
+      )}
     </div>
   );
 }
@@ -495,11 +596,11 @@ function SpinWheel({ songs, activeSong, onSpin }) {
     const x2 = cx + r * Math.cos(endRad);
     const y2 = cy + r * Math.sin(endRad);
     const midRad = ((i + 0.5) * 360 / n - 90) * Math.PI / 180;
-    const tr = r * 0.63;
+    const tr = r * 0.68;
     const tx = cx + tr * Math.cos(midRad);
     const ty = cy + tr * Math.sin(midRad);
     const textDeg = (i + 0.5) * 360 / n;
-    const label = song.title.length > 16 ? song.title.slice(0, 15) + '…' : song.title;
+    const label = song.title.length > 13 ? song.title.slice(0, 12) + '…' : song.title;
     return { i, label, x1, y1, x2, y2, tx, ty, textDeg, color: WHEEL_COLORS[i % WHEEL_COLORS.length] };
   });
 
@@ -512,7 +613,7 @@ function SpinWheel({ songs, activeSong, onSpin }) {
             {segments.map(seg => (
               <g key={seg.i}>
                 <path d={`M ${cx} ${cy} L ${seg.x1} ${seg.y1} A ${r} ${r} 0 0 1 ${seg.x2} ${seg.y2} Z`} fill={seg.color} stroke="rgba(0,0,0,.25)" strokeWidth="1.5" />
-                <text transform={`rotate(${seg.textDeg}, ${seg.tx}, ${seg.ty})`} x={seg.tx} y={seg.ty} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize="10.5" fontWeight="800" fontFamily="system-ui, sans-serif" style={{ textShadow: '0 1px 3px rgba(0,0,0,.7)' }}>{seg.label}</text>
+                <text transform={`rotate(${seg.textDeg}, ${seg.tx}, ${seg.ty})`} x={seg.tx} y={seg.ty} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize="12" fontWeight="800" fontFamily="system-ui, sans-serif" style={{ textShadow: '0 1px 4px rgba(0,0,0,.9)' }}>{seg.label}</text>
               </g>
             ))}
             <circle cx={cx} cy={cy} r={38} fill="var(--bg-deep)" stroke="rgba(255,255,255,.15)" strokeWidth="2" />
@@ -523,6 +624,55 @@ function SpinWheel({ songs, activeSong, onSpin }) {
       <Btn kind="primary" size="lg" onClick={onSpin} disabled={spinning} icon="ic-mic">
         {activeSong ? 'Respin' : 'Spin the Wheel'}
       </Btn>
+    </div>
+  );
+}
+
+// ─── Wheel screen (group song selection) ─────────────────────────────────────
+
+function WheelScreen({ songs, activeSong, groupLabel, accentColor, onSpin, onPerform }) {
+  const [songRevealed, setSongRevealed] = useState(false);
+  const prevSongRef = useRef(null);
+
+  useEffect(() => {
+    if (!activeSong) { setSongRevealed(false); return; }
+    if (activeSong.title === prevSongRef.current) return;
+    prevSongRef.current = activeSong.title;
+    setSongRevealed(false);
+    const t = setTimeout(() => setSongRevealed(true), 3700);
+    return () => clearTimeout(t);
+  }, [activeSong]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+      <div className="mono" style={{ letterSpacing: 3, color: accentColor || 'var(--accent-1)', fontSize: '.72rem', textTransform: 'uppercase' }}>
+        {groupLabel}
+      </div>
+      <SpinWheel songs={songs} activeSong={activeSong} onSpin={onSpin} />
+      <div style={{ textAlign: 'center', minHeight: 130, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        {!activeSong ? (
+          <div style={{ color: 'var(--muted)', fontSize: '.95rem' }}>Spin the wheel to select a song</div>
+        ) : !songRevealed ? (
+          <div>
+            <div className="display" style={{ fontSize: '3rem', animation: 'pulse 0.7s ease-in-out infinite', color: 'var(--text-2)' }}>???</div>
+            <div style={{ color: 'var(--muted)', fontSize: '.8rem', marginTop: 6 }}>Spinning…</div>
+          </div>
+        ) : (
+          <div style={{ animation: 'float-up 0.5s ease-out' }}>
+            <div className="display" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', lineHeight: 1.1, color: 'var(--text)', marginBottom: 6 }}>
+              {activeSong.title}
+            </div>
+            <div style={{ color: 'var(--accent-1)', fontWeight: 700, fontSize: '1.1rem', marginBottom: 24 }}>
+              {activeSong.artist}
+            </div>
+            {onPerform && (
+              <Btn kind="success" size="lg" onClick={onPerform} icon="ic-mic">
+                {groupLabel.includes('Group A') ? 'Group A' : 'Group B'} is Performing! →
+              </Btn>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -554,12 +704,17 @@ function HostLipsync({ state, send }) {
   const ranksA = lipsync.ranksA || {};
   const ranksB = lipsync.ranksB || {};
 
-  const subtitles = {
-    reveal: 'Group Draw', performA: 'Round 1 · Group A Performing',
+  const [localRevealStep, setLocalRevealStep] = useState('animation'); // 'animation' | 'wheel'
+
+  const subtitleMap = {
+    performA: 'Round 1 · Group A Performing',
     voteA: 'Round 1 · Voting Open', resultsA: 'Round 1 · Results',
-    spinB: 'Round 2 · Group B', performB: 'Round 2 · Group B Performing',
+    spinB: 'Round 2 · Group B Song Selection', performB: 'Round 2 · Group B Performing',
     voteB: 'Round 2 · Voting Open', resultsB: 'Round 2 · Results',
   };
+  const subtitle = subPhase === 'reveal'
+    ? (localRevealStep === 'animation' ? 'Group Draw' : 'Group A Song Selection')
+    : (subtitleMap[subPhase] || '');
 
   const bottomButtons = {
     performA: <Btn kind="primary" size="md" onClick={() => send({ type: 'host_lipsync_vote_a' })} icon="ic-check">Open Voting →</Btn>,
@@ -629,35 +784,29 @@ function HostLipsync({ state, send }) {
     <Stage>
       <GameHeader
         title="Lipsync Off"
-        subtitle={subtitles[subPhase] || ''}
+        subtitle={subtitle}
         accent="var(--accent-2)"
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1200, margin: '0 auto', width: '100%' }}>
 
-        {/* ── reveal: group draw animation + wheel for Group A ── */}
-        {subPhase === 'reveal' && (
-          <>
-            <GroupReveal groupA={groupA} groupB={groupB} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
-              <SpinWheel songs={LIPSYNC_SONGS} activeSong={lipsync.songA} onSpin={() => send({ type: 'host_lipsync_spin_a' })} />
-              <Card glow style={{ padding: 32, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 280 }}>
-                {!lipsync.songA ? (
-                  <div style={{ textAlign: 'center', color: 'var(--muted)' }}>
-                    <svg width="52" height="52" style={{ color: 'var(--dim)', marginBottom: 14 }}><use href="#ic-music" /></svg>
-                    <div>Spin the wheel for Group A's song</div>
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', animation: 'float-up .4s ease-out' }}>
-                    <div className="mono" style={{ fontSize: '.7rem', color: 'var(--accent-2)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12 }}>Group A's Song</div>
-                    <div className="display" style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', lineHeight: 1.1, color: 'var(--text)', marginBottom: 8 }}>{lipsync.songA.title}</div>
-                    <div style={{ color: 'var(--accent-1)', fontWeight: 700, marginBottom: 22 }}>{lipsync.songA.artist}</div>
-                    <Btn kind="success" size="lg" onClick={() => send({ type: 'host_lipsync_perform_a' })} icon="ic-mic">Group A is Performing! →</Btn>
-                  </div>
-                )}
-              </Card>
-            </div>
-          </>
+        {/* ── reveal: group draw → then song selection for Group A ── */}
+        {subPhase === 'reveal' && localRevealStep === 'animation' && (
+          <GroupReveal
+            groupA={groupA}
+            groupB={groupB}
+            onContinue={() => setLocalRevealStep('wheel')}
+          />
+        )}
+        {subPhase === 'reveal' && localRevealStep === 'wheel' && (
+          <WheelScreen
+            songs={LIPSYNC_SONGS}
+            activeSong={lipsync.songA}
+            groupLabel="Group A · Performs First"
+            accentColor="var(--accent-1)"
+            onSpin={() => send({ type: 'host_lipsync_spin_a' })}
+            onPerform={() => send({ type: 'host_lipsync_perform_a' })}
+          />
         )}
 
         {/* ── performA: song display + team rosters ── */}
@@ -692,26 +841,16 @@ function HostLipsync({ state, send }) {
         {/* ── resultsA ── */}
         {subPhase === 'resultsA' && lipsync.scoresA && <ResultsPanel scores={lipsync.scoresA} groupTeams={groupATeams} />}
 
-        {/* ── spinB ── */}
+        {/* ── spinB: song selection for Group B ── */}
         {subPhase === 'spinB' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, flex: 1 }}>
-            <SpinWheel songs={LIPSYNC_SONGS} activeSong={lipsync.songB} onSpin={() => send({ type: 'host_lipsync_spin_b' })} />
-            <Card glow style={{ padding: 32, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              {!lipsync.songB ? (
-                <div style={{ textAlign: 'center', color: 'var(--muted)' }}>
-                  <svg width="52" height="52" style={{ color: 'var(--dim)', marginBottom: 14 }}><use href="#ic-music" /></svg>
-                  <div>Spin the wheel for Group B's song</div>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', animation: 'float-up .4s ease-out' }}>
-                  <div className="mono" style={{ fontSize: '.7rem', color: 'var(--accent-2)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12 }}>Group B's Song</div>
-                  <div className="display" style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', lineHeight: 1.1, color: 'var(--text)', marginBottom: 8 }}>{lipsync.songB.title}</div>
-                  <div style={{ color: 'var(--accent-1)', fontWeight: 700, marginBottom: 22 }}>{lipsync.songB.artist}</div>
-                  <Btn kind="success" size="lg" onClick={() => send({ type: 'host_lipsync_perform_b' })} icon="ic-mic">Group B is Performing! →</Btn>
-                </div>
-              )}
-            </Card>
-          </div>
+          <WheelScreen
+            songs={LIPSYNC_SONGS}
+            activeSong={lipsync.songB}
+            groupLabel="Group B · Performs Second"
+            accentColor="var(--accent-2)"
+            onSpin={() => send({ type: 'host_lipsync_spin_b' })}
+            onPerform={() => send({ type: 'host_lipsync_perform_b' })}
+          />
         )}
 
         {/* ── performB ── */}
