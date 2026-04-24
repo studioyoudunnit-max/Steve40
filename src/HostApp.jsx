@@ -994,8 +994,7 @@ function HostSongpop({ state, send }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, flex: 1 }}>
             {TEAMS.map(team => {
               const teamPlayers = players.filter(p => p.team === team.id);
-              const repId = songpop.reps[team.id];
-              const rep = teamPlayers.find(p => p.id === repId);
+              const votedCount = teamPlayers.filter(p => songpop.votes?.[p.id]).length;
               return (
                 <Card key={team.id} style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
@@ -1003,20 +1002,28 @@ function HostSongpop({ state, send }) {
                     <div style={{ fontWeight: 800, color: team.color, fontSize: '.9rem' }}>{team.name} Team</div>
                   </div>
                   <div style={{ padding: '14px 12px', background: `color-mix(in oklab, ${team.color} 14%, transparent)`, border: `1px solid color-mix(in oklab, ${team.color} 30%, transparent)`, borderRadius: 12, textAlign: 'center' }}>
-                    <div style={{ width: 48, height: 48, margin: '0 auto 8px', borderRadius: '50%', background: `linear-gradient(135deg, ${team.color}, var(--accent-1))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontFamily: 'var(--font-display)', color: '#fff', boxShadow: `0 0 16px ${team.color}` }}>
-                      {rep ? rep.name[0] : '?'}
+                    <div style={{ width: 48, height: 48, margin: '0 auto 8px', borderRadius: '50%', background: `color-mix(in oklab, ${team.color} 30%, #222)`, border: `2px dashed color-mix(in oklab, ${team.color} 50%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: team.color }}>
+                      ?
                     </div>
-                    <div className="display" style={{ fontSize: '1rem', color: rep ? 'var(--text)' : 'var(--muted)' }}>{rep ? rep.name : 'Choosing…'}</div>
+                    <div className="display" style={{ fontSize: '1rem', color: 'var(--muted)' }}>Voting…</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {teamPlayers.map(p => (
-                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 9px', background: repId === p.id ? `color-mix(in oklab, ${team.color} 16%, transparent)` : 'rgba(255,255,255,.02)', border: `1px solid ${repId === p.id ? team.color : 'var(--border-2)'}`, borderRadius: 9, fontSize: '.8rem', color: 'var(--text)' }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: team.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{p.name[0]}</div>
-                        <span style={{ flex: 1 }}>{p.name}</span>
-                        {repId === p.id && <svg width="12" height="12" style={{ color: team.color }}><use href="#ic-check" /></svg>}
-                      </div>
-                    ))}
+                    {teamPlayers.map(p => {
+                      const hasVoted = !!songpop.votes?.[p.id];
+                      return (
+                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 9px', background: hasVoted ? `color-mix(in oklab, ${team.color} 10%, transparent)` : 'rgba(255,255,255,.02)', border: `1px solid ${hasVoted ? `color-mix(in oklab, ${team.color} 35%, transparent)` : 'var(--border-2)'}`, borderRadius: 9, fontSize: '.8rem', color: 'var(--text)' }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', background: team.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{p.name[0]}</div>
+                          <span style={{ flex: 1 }}>{p.name}</span>
+                          {hasVoted
+                            ? <svg width="12" height="12" style={{ color: team.color }}><use href="#ic-check" /></svg>
+                            : <span style={{ fontSize: '.65rem', color: 'var(--muted)' }}>…</span>}
+                        </div>
+                      );
+                    })}
                     {teamPlayers.length === 0 && <div style={{ color: 'var(--muted)', fontSize: '.75rem', fontStyle: 'italic', padding: '4px 9px' }}>No players yet</div>}
+                  </div>
+                  <div className="mono" style={{ fontSize: '.65rem', color: votedCount === teamPlayers.length && teamPlayers.length > 0 ? '#00e676' : 'var(--muted)', textAlign: 'center', letterSpacing: 1 }}>
+                    {votedCount} / {teamPlayers.length} voted
                   </div>
                 </Card>
               );

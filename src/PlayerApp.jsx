@@ -654,7 +654,8 @@ function PlayerSongpop({ me, state, send }) {
   const { songpop } = state;
   const myTeam = TEAMS.find(t => t.id === me.team);
   const teamPlayers = Object.values(state.players).filter(p => p.team === me.team);
-  const currentRep = songpop.reps[me.team];
+  const myVote = songpop.votes?.[me.id];         // who I personally voted for
+  const repId  = songpop.reps?.[me.team];        // only set after lock
 
   return (
     <Screen teamColor={myTeam?.color}>
@@ -668,26 +669,31 @@ function PlayerSongpop({ me, state, send }) {
       <div style={{ textAlign: 'center', marginBottom: 18 }}>
         <div className="display" style={{ fontSize: '1.4rem', color: 'var(--text)', marginBottom: 4 }}>Songpop Duel</div>
         <div style={{ color: 'var(--muted)', fontSize: '.85rem' }}>
-          {songpop.locked ? 'Champions locked. Watch the big screen.' : "Pick your team's champion for the duel"}
+          {songpop.locked ? 'Champions locked. Watch the big screen.' : "Vote for your team's champion"}
         </div>
       </div>
 
       {!songpop.locked && (
         <>
-          <div className="mono" style={{ fontSize: '.65rem', color: 'var(--muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Your team roster</div>
+          <div className="mono" style={{ fontSize: '.65rem', color: 'var(--muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
+            {myVote ? 'Your vote — tap to change' : 'Your team roster'}
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-            {teamPlayers.map(p => (
-              <button key={p.id} onClick={() => send({ type: 'songpop_pick_rep', teamId: me.team, playerId: p.id })} style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
-                background: currentRep === p.id ? `color-mix(in oklab, ${myTeam.color} 18%, transparent)` : 'rgba(255,255,255,.03)',
-                border: `1.5px solid ${currentRep === p.id ? myTeam.color : 'var(--border-2)'}`,
-                borderRadius: 12, color: 'var(--text)', cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'all .15s',
-              }}>
-                <div style={{ width: 34, height: 34, borderRadius: '50%', background: myTeam.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.9rem', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{p.name[0]}</div>
-                <span style={{ flex: 1, fontWeight: 700 }}>{p.name}</span>
-                {currentRep === p.id && <svg width="16" height="16" style={{ color: myTeam.color }}><use href="#ic-check" /></svg>}
-              </button>
-            ))}
+            {teamPlayers.map(p => {
+              const voted = myVote === p.id;
+              return (
+                <button key={p.id} onClick={() => send({ type: 'songpop_pick_rep', playerId: p.id })} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
+                  background: voted ? `color-mix(in oklab, ${myTeam.color} 18%, transparent)` : 'rgba(255,255,255,.03)',
+                  border: `1.5px solid ${voted ? myTeam.color : 'var(--border-2)'}`,
+                  borderRadius: 12, color: 'var(--text)', cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'all .15s',
+                }}>
+                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: myTeam.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.9rem', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{p.name[0]}</div>
+                  <span style={{ flex: 1, fontWeight: 700 }}>{p.name}</span>
+                  {voted && <svg width="16" height="16" style={{ color: myTeam.color }}><use href="#ic-check" /></svg>}
+                </button>
+              );
+            })}
           </div>
         </>
       )}
@@ -695,10 +701,10 @@ function PlayerSongpop({ me, state, send }) {
       {songpop.locked && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, textAlign: 'center' }}>
           <div style={{ width: 70, height: 70, borderRadius: '50%', background: `linear-gradient(135deg, ${myTeam.color}, var(--accent-1))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem', color: '#fff', fontFamily: 'var(--font-display)', boxShadow: `0 0 30px ${myTeam.color}` }}>
-            {Object.values(state.players).find(p => p.id === currentRep)?.name?.[0] ?? '?'}
+            {Object.values(state.players).find(p => p.id === repId)?.name?.[0] ?? '?'}
           </div>
           <div className="display" style={{ fontSize: '1.3rem', color: 'var(--text)' }}>
-            {Object.values(state.players).find(p => p.id === currentRep)?.name ?? '—'} is your rep
+            {Object.values(state.players).find(p => p.id === repId)?.name ?? '—'} is your champion
           </div>
           <div style={{ color: 'var(--muted)', fontSize: '.88rem' }}>Watch the big screen for the duel!</div>
         </div>
