@@ -6,14 +6,16 @@ import { Logo, MiniLogo, Btn, Card, TeamChip, TeamDot, TeamOrb } from './ui-prim
 
 // ─── Full-screen mobile wrapper (replaces Phone) ──────────────────────────────
 
-function Screen({ children, style }) {
+function Screen({ children, style, teamColor }) {
   return (
     <div style={{
       minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       background: 'var(--bg-deep)',
-      backgroundImage: 'var(--bg-layer)',
+      backgroundImage: teamColor
+        ? `radial-gradient(ellipse at 50% 0%, color-mix(in oklab, ${teamColor} 20%, transparent) 0%, transparent 65%), var(--bg-layer)`
+        : 'var(--bg-layer)',
       backgroundAttachment: 'fixed',
       ...style,
     }}>
@@ -168,7 +170,7 @@ function LobbyScreen({ me, state }) {
   const hasScores = standings.some(t => t.score > 0);
 
   return (
-    <Screen>
+    <Screen teamColor={team?.color}>
       <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <MiniLogo />
         <div className="mono" style={{ fontSize: '.65rem', color: 'var(--muted)', letterSpacing: 1.5 }}>WAITING</div>
@@ -288,7 +290,7 @@ function PlayerTrivia({ me, state, send }) {
   return (
     <>
       {showDrink && <DrinkOverlay onDismiss={() => setShowDrink(false)} />}
-    <Screen>
+    <Screen teamColor={team?.color}>
       <div style={{ marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <TeamChip team={team} />
         <div className="display" style={{ color: trivia.timerLeft <= 3 ? '#ff3b61' : 'var(--accent-1)', fontSize: '1.3rem', textShadow: '0 0 10px currentColor', animation: trivia.timerLeft <= 3 ? 'tick 1s infinite' : 'none' }}>
@@ -376,7 +378,7 @@ function PlayerTwink({ me, state, send }) {
   return (
     <>
       {showDrink && <DrinkOverlay onDismiss={() => setShowDrink(false)} />}
-    <Screen>
+    <Screen teamColor={team?.color}>
       <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <TeamChip team={team} />
         <div className="mono" style={{ fontSize: '.65rem', color: 'var(--muted)', letterSpacing: 1.5 }}>R{twink.roundIdx + 1}/{CELEB_ROUNDS.length}</div>
@@ -519,7 +521,7 @@ function PlayerLipsync({ me, state, send }) {
   );
 
   return (
-    <Screen>
+    <Screen teamColor={team?.color}>
       <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <TeamChip team={team} />
         <div className="mono" style={{ fontSize: '.65rem', color: 'var(--muted)', letterSpacing: 1.5 }}>LIPSYNC</div>
@@ -655,7 +657,7 @@ function PlayerSongpop({ me, state, send }) {
   const currentRep = songpop.reps[me.team];
 
   return (
-    <Screen>
+    <Screen teamColor={myTeam?.color}>
       <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <TeamChip team={myTeam} />
         <div className="mono" style={{ fontSize: '.65rem', color: songpop.locked ? 'var(--accent-4)' : 'var(--muted)', letterSpacing: 1.5 }}>
@@ -723,7 +725,7 @@ function PlayerFinale({ me, state }) {
   const myRevealed = revealStep >= (9 - myRank);
 
   return (
-    <Screen>
+    <Screen teamColor={myTeam?.color}>
       <div style={{ textAlign: 'center', marginBottom: 16 }}>
         <Logo size="md" />
         <div className="mono" style={{ fontSize: '.7rem', color: 'var(--accent-4)', letterSpacing: 3, textTransform: 'uppercase', marginTop: 8 }}>★ Final Results ★</div>
@@ -770,7 +772,7 @@ function StandbyScreen({ me, state }) {
   const myTeamScore = standings.find(t => t.id === me.team)?.score || 0;
 
   return (
-    <Screen>
+    <Screen teamColor={team?.color}>
       <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <TeamChip team={team} />
         <div className="mono" style={{ fontSize: '.65rem', color: 'var(--muted)', letterSpacing: 1.5 }}>STANDBY</div>
