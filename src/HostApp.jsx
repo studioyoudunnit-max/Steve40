@@ -951,11 +951,72 @@ function HostLipsync({ state, send }) {
 const SONGPOP_PRIZES = { 1: 10000, 2: 7000, 3: 4500, 4: 2500, 5: 1200, 6: 600, 7: 200, 8: 0 };
 const PLACE_LABELS = ['', '🥇 1st', '🥈 2nd', '🥉 3rd', '4th', '5th', '6th', '7th', '8th'];
 
+function ChampionRevealModal({ songpop, players, onContinue }) {
+  const reps = TEAMS.map((team, i) => ({
+    team,
+    rep: players.find(p => p.id === songpop.reps[team.id]),
+    delay: i * 0.11,
+  }));
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 60,
+      background: 'radial-gradient(ellipse at 50% 30%, #1a0838 0%, #06030f 100%)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: 36, padding: '40px 48px',
+      animation: 'float-up .3s ease-out',
+    }}>
+      <div style={{ textAlign: 'center', animation: 'float-up .3s ease-out' }}>
+        <div className="mono" style={{ fontSize: '.7rem', color: 'var(--accent-4)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8 }}>Songpop Duel</div>
+        <div className="display" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'var(--text)', lineHeight: 1 }}>Your Champions</div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, maxWidth: 960, width: '100%' }}>
+        {reps.map(({ team, rep, delay }) => (
+          <div key={team.id} style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+            padding: '22px 16px',
+            background: `color-mix(in oklab, ${team.color} 12%, rgba(255,255,255,.03))`,
+            border: `2px solid color-mix(in oklab, ${team.color} 45%, transparent)`,
+            borderRadius: 20,
+            boxShadow: `0 0 30px color-mix(in oklab, ${team.color} 15%, transparent)`,
+            animation: `float-up .45s ${delay}s ease-out both`,
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
+              background: `linear-gradient(135deg, ${team.color}, color-mix(in oklab, ${team.color} 50%, var(--accent-2)))`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.6rem', fontFamily: 'var(--font-display)', fontWeight: 800, color: '#fff',
+              boxShadow: `0 0 24px color-mix(in oklab, ${team.color} 55%, transparent)`,
+            }}>
+              {rep?.name?.[0] ?? '?'}
+            </div>
+            <div style={{ fontWeight: 800, color: team.color, fontSize: '.78rem', letterSpacing: 1, textTransform: 'uppercase' }}>{team.name}</div>
+            <div className="display" style={{ fontSize: '1.1rem', color: 'var(--text)', textAlign: 'center', lineHeight: 1.15 }}>
+              {rep?.name ?? '—'}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ animation: `float-up .4s ${TEAMS.length * 0.11 + 0.3}s ease-out both` }}>
+        <Btn kind="primary" size="md" onClick={onContinue} icon="ic-arrow-right">
+          Start Tournament →
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
 function HostSongpop({ state, send }) {
   const { songpop } = state;
   const players = Object.values(state.players);
+  const [revealDismissed, setRevealDismissed] = useState(false);
   // local placement state — host assigns 1st-8th to each team
   const [placements, setPlacements] = useState({}); // teamId -> place number
+
+  useEffect(() => { if (!songpop.locked) setRevealDismissed(false); }, [songpop.locked]);
 
   const assignPlace = (teamId, place) => {
     setPlacements(prev => {
@@ -1040,6 +1101,14 @@ function HostSongpop({ state, send }) {
   // Phase 2: placing teams (after IRL tournament)
   if (!songpop.awarded) {
     return (
+      <>
+        {!revealDismissed && (
+          <ChampionRevealModal
+            songpop={songpop}
+            players={players}
+            onContinue={() => setRevealDismissed(true)}
+          />
+        )}
       <Stage>
         <GameHeader
           title="Songpop Duel · Award Points"
@@ -1096,6 +1165,7 @@ function HostSongpop({ state, send }) {
           </div>
         </div>
       </Stage>
+      </>
     );
   }
 
