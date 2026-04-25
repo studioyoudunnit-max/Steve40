@@ -70,6 +70,42 @@ export const TRIVIA_QS = [
     correct: 3,
     fact: "And the drag queen signed the finisher's medal.",
   },
+  {
+    category: 'Steve · Music', worth: 1000,
+    text: "What is Steve's all time favourite song?",
+    answers: ["Man I Feel Like A Woman", "Still the One", "Who's Bed", "Any Man of Mine"],
+    correct: 0,
+  },
+  {
+    category: 'Steve · Romance', worth: 1500,
+    text: "What is the furthest Steve has travelled for a date?",
+    answers: ["Panama", "Vancouver", "Copenhagen", "Nashville"],
+    correct: 2,
+  },
+  {
+    category: 'Steve · Drinks', worth: 1000,
+    text: "What is Steve's favourite drink?",
+    answers: ["Champagne", "Margharita", "Aperol Spritz", "Old Fashioned"],
+    correct: 1,
+  },
+  {
+    category: 'Steve · Drag', worth: 1000,
+    text: "Who is Steve's favourite drag queen from RuPaul's Drag Race?",
+    answers: ["Jujubee", "Jimbo", "Jinx Monsoon", "Bob the Drag Queen"],
+    correct: 2,
+  },
+  {
+    category: 'Steve · Dating', worth: 1500,
+    text: "Which of the following names has Steve dated the most?",
+    answers: ["Matt", "Sam", "Dave", "Justin"],
+    correct: 0,
+  },
+  {
+    category: 'Steve · Movies', worth: 1000,
+    text: "What is Steve's favourite movie?",
+    answers: ["Contact", "Titanic", "Gravity", "Top Gun: Maverick"],
+    correct: 0,
+  },
 ];
 
 export const CELEB_ROUNDS = [
