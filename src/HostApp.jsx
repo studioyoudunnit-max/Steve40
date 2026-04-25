@@ -960,7 +960,7 @@ function ChampionRevealModal({ songpop, players, onContinue }) {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 60,
+      width: '100%', height: '100%',
       background: 'radial-gradient(ellipse at 50% 30%, #1a0838 0%, #06030f 100%)',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
@@ -1098,17 +1098,20 @@ function HostSongpop({ state, send }) {
     );
   }
 
-  // Phase 2: placing teams (after IRL tournament)
+  // Phase 2a: champion reveal
+  if (!songpop.awarded && !revealDismissed) {
+    return (
+      <ChampionRevealModal
+        songpop={songpop}
+        players={players}
+        onContinue={() => setRevealDismissed(true)}
+      />
+    );
+  }
+
+  // Phase 2b: placing teams (after IRL tournament)
   if (!songpop.awarded) {
     return (
-      <>
-        {!revealDismissed && (
-          <ChampionRevealModal
-            songpop={songpop}
-            players={players}
-            onContinue={() => setRevealDismissed(true)}
-          />
-        )}
       <Stage>
         <GameHeader
           title="Songpop Duel · Award Points"
@@ -1165,7 +1168,6 @@ function HostSongpop({ state, send }) {
           </div>
         </div>
       </Stage>
-      </>
     );
   }
 
