@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { play } from './sounds.js';
 import { useGame, getSessionId } from './useGame.js';
-import { TEAMS, TRIVIA_QS, CELEB_ROUNDS, LIPSYNC_SONGS } from './constants.js';
+import { TEAMS, TRIVIA_QS, CELEB_ROUNDS, LIPSYNC_SONGS, SONGPOP_CATEGORIES } from './constants.js';
 import { Logo, MiniLogo, Btn, Card, TeamChip, TeamDot, TeamOrb } from './ui-primitives.jsx';
 
 // ─── Full-screen mobile wrapper (replaces Phone) ──────────────────────────────
@@ -654,44 +654,104 @@ function PlayerSongpop({ me, state, send }) {
   const { songpop } = state;
   const myTeam = TEAMS.find(t => t.id === me.team);
   const teamPlayers = Object.values(state.players).filter(p => p.team === me.team);
-  const myVote = songpop.votes?.[me.id];         // who I personally voted for
-  const repId  = songpop.reps?.[me.team];        // only set after lock
+  const teamAssignments = songpop.assignments?.[me.team] || {};
+  const [lifted, setLifted] = useState(null); // playerId currently "held"
+
+  // clear lifted selection when locked
+  useEffect(() => { if (songpop.locked) setLifted(null); }, [songpop.locked]);
+
+  const tapPlayer = (playerId) => {
+    if (songpop.locked) return;
+    setLifted(prev => prev === playerId ? null : playerId);
+  };
+
+  const tapCategory = (categoryKey) => {
+    if (!lifted || songpop.locked) return;
+    send({ type: 'songpop_assign', playerId: lifted, category: categoryKey });
+    setLifted(null);
+  };
+
+  const removePlayer = (playerId) => {
+    if (songpop.locked) return;
+    send({ type: 'songpop_assign', playerId, category: null });
+    setLifted(null);
+  };
+
+  const unassigned = teamPlayers.filter(p => !teamAssignments[p.id]);
 
   return (
     <Screen teamColor={myTeam?.color}>
-      <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <TeamChip team={myTeam} />
-        <div className="mono" style={{ fontSize: '.65rem', color: songpop.locked ? 'var(--accent-4)' : 'var(--muted)', letterSpacing: 1.5 }}>
-          {songpop.locked ? 'LOCKED' : 'PICKING'}
-        </div>
-      </div>
-
-      <div style={{ textAlign: 'center', marginBottom: 18 }}>
-        <div className="display" style={{ fontSize: '1.4rem', color: 'var(--text)', marginBottom: 4 }}>Songpop Duel</div>
-        <div style={{ color: 'var(--muted)', fontSize: '.85rem' }}>
-          {songpop.locked ? 'Champions locked. Watch the big screen.' : "Vote for your team's champion"}
+        <div className="mono" style={{ fontSize: '.65rem', color: songpop.locked ? 'var(--accent-4)' : lifted ? myTeam?.color : 'var(--muted)', letterSpacing: 1.5, transition: 'color .2s' }}>
+          {songpop.locked ? 'LOCKED' : lifted ? 'DROP INTO A CATEGORY' : 'ASSIGNING'}
         </div>
       </div>
 
       {!songpop.locked && (
         <>
-          <div className="mono" style={{ fontSize: '.65rem', color: 'var(--muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
-            {myVote ? 'Your vote — tap to change' : 'Your team roster'}
+          {/* Unassigned roster */}
+          <div className="mono" style={{ fontSize: '.6rem', color: 'var(--muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
+            Tap to pick up · tap a category to assign
           </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14, minHeight: 38 }}>
+            {unassigned.length === 0
+              ? <div style={{ fontSize: '.78rem', color: 'var(--accent-2)', fontWeight: 700 }}>Everyone assigned ✓</div>
+              : unassigned.map(p => {
+                  const isLifted = lifted === p.id;
+                  return (
+                    <button key={p.id} onClick={() => tapPlayer(p.id)} style={{
+                      display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px',
+                      background: isLifted ? myTeam?.color : 'rgba(255,255,255,.06)',
+                      border: `1.5px solid ${isLifted ? myTeam?.color : 'var(--border-2)'}`,
+                      borderRadius: 99, color: isLifted ? '#fff' : 'var(--text)',
+                      cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '.82rem',
+                      transform: isLifted ? 'scale(1.06)' : 'scale(1)',
+                      boxShadow: isLifted ? `0 4px 16px color-mix(in oklab, ${myTeam?.color} 50%, transparent)` : 'none',
+                      transition: 'all .15s',
+                    }}>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: isLifted ? 'rgba(255,255,255,.25)' : myTeam?.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.7rem', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{p.name[0]}</div>
+                      {p.name}
+                    </button>
+                  );
+                })}
+          </div>
+
+          {/* Category buckets */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-            {teamPlayers.map(p => {
-              const voted = myVote === p.id;
+            {SONGPOP_CATEGORIES.map(cat => {
+              const assigned = teamPlayers.filter(p => teamAssignments[p.id] === cat.key);
+              const isTarget = !!lifted;
               return (
-                <button key={p.id} onClick={() => send({ type: 'songpop_pick_rep', playerId: p.id })} style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
-                  background: voted ? `color-mix(in oklab, ${myTeam.color} 18%, transparent)` : 'rgba(255,255,255,.03)',
-                  border: `1.5px solid ${voted ? myTeam.color : 'var(--border-2)'}`,
-                  borderRadius: 12, color: 'var(--text)', cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'all .15s',
+                <div key={cat.key} onClick={() => tapCategory(cat.key)} style={{
+                  padding: '10px 12px', borderRadius: 14,
+                  background: isTarget ? `color-mix(in oklab, ${myTeam?.color} 14%, rgba(255,255,255,.05))` : 'rgba(255,255,255,.03)',
+                  border: `2px ${isTarget ? 'solid' : 'dashed'} ${isTarget ? myTeam?.color : 'var(--border-2)'}`,
+                  cursor: isTarget ? 'pointer' : 'default',
+                  transition: 'all .15s',
+                  boxShadow: isTarget ? `0 0 12px color-mix(in oklab, ${myTeam?.color} 30%, transparent)` : 'none',
                 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: myTeam.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.9rem', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{p.name[0]}</div>
-                  <span style={{ flex: 1, fontWeight: 700 }}>{p.name}</span>
-                  {voted && <svg width="16" height="16" style={{ color: myTeam.color }}><use href="#ic-check" /></svg>}
-                </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: assigned.length ? 8 : 0 }}>
+                    <span style={{ fontSize: '1rem' }}>{cat.emoji}</span>
+                    <span style={{ fontSize: '.78rem', fontWeight: 800, color: isTarget ? myTeam?.color : 'var(--text-2)' }}>{cat.label}</span>
+                    {assigned.length > 0 && <span className="mono" style={{ fontSize: '.6rem', color: 'var(--muted)', marginLeft: 'auto' }}>{assigned.length}</span>}
+                  </div>
+                  {assigned.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {assigned.map(p => (
+                        <button key={p.id} onClick={e => { e.stopPropagation(); removePlayer(p.id); }} style={{
+                          display: 'flex', alignItems: 'center', gap: 5, padding: '4px 8px',
+                          background: `color-mix(in oklab, ${myTeam?.color} 20%, transparent)`,
+                          border: `1px solid color-mix(in oklab, ${myTeam?.color} 40%, transparent)`,
+                          borderRadius: 99, color: 'var(--text)', cursor: 'pointer',
+                          fontFamily: 'var(--font-body)', fontSize: '.75rem', fontWeight: 700,
+                        }}>
+                          {p.name} <span style={{ opacity: .5, fontSize: '.65rem' }}>✕</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -699,14 +759,20 @@ function PlayerSongpop({ me, state, send }) {
       )}
 
       {songpop.locked && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, textAlign: 'center' }}>
-          <div style={{ width: 70, height: 70, borderRadius: '50%', background: `linear-gradient(135deg, ${myTeam.color}, var(--accent-1))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem', color: '#fff', fontFamily: 'var(--font-display)', boxShadow: `0 0 30px ${myTeam.color}` }}>
-            {Object.values(state.players).find(p => p.id === repId)?.name?.[0] ?? '?'}
-          </div>
-          <div className="display" style={{ fontSize: '1.3rem', color: 'var(--text)' }}>
-            {Object.values(state.players).find(p => p.id === repId)?.name ?? '—'} is your champion
-          </div>
-          <div style={{ color: 'var(--muted)', fontSize: '.88rem' }}>Watch the big screen for the duel!</div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="display" style={{ fontSize: '1.1rem', color: 'var(--text)', textAlign: 'center', marginBottom: 4 }}>Your team's lineup</div>
+          {SONGPOP_CATEGORIES.map(cat => {
+            const assigned = teamPlayers.filter(p => teamAssignments[p.id] === cat.key);
+            return (
+              <div key={cat.key} style={{ padding: '10px 14px', background: `color-mix(in oklab, ${myTeam?.color} 10%, rgba(255,255,255,.03))`, border: `1px solid color-mix(in oklab, ${myTeam?.color} 30%, transparent)`, borderRadius: 12 }}>
+                <div style={{ fontSize: '.75rem', fontWeight: 800, color: myTeam?.color, marginBottom: 5 }}>{cat.emoji} {cat.label}</div>
+                {assigned.length === 0
+                  ? <div style={{ fontSize: '.72rem', color: 'var(--muted)', fontStyle: 'italic' }}>Nobody assigned</div>
+                  : <div style={{ fontSize: '.82rem', color: 'var(--text)', fontWeight: 700 }}>{assigned.map(p => p.name).join(', ')}</div>}
+              </div>
+            );
+          })}
+          <div style={{ marginTop: 'auto', textAlign: 'center', color: 'var(--muted)', fontSize: '.82rem' }}>Watch the big screen!</div>
         </div>
       )}
     </Screen>

@@ -38,8 +38,7 @@ function freshState() {
       scoresB: null,
     },
     songpop: {
-      votes: {},          // sessionId -> playerId (who that player voted for)
-      reps: {},           // teamId -> sessionId (resolved at lock time)
+      assignments: {},    // teamId -> { playerId: categoryKey | null }
       locked: false,
       placements: {},     // teamId -> place (1–8)
       awarded: false,
@@ -301,15 +300,20 @@ const server = Bun.serve({
           break;
         }
 
-        case 'songpop_pick_rep': {
-          const { playerId } = msg;
+        case 'songpop_assign': {
+          const { playerId, category } = msg;
           if (state.songpop.locked) break;
-          const voter = state.players[client.sessionId];
-          if (!voter) break;
-          // validate candidate is on the same team
-          const candidate = state.players[playerId];
-          if (!candidate || candidate.team !== voter.team) break;
-          state.songpop.votes[client.sessionId] = playerId;
+          const assigner = state.players[client.sessionId];
+          if (!assigner) break;
+          const target = state.players[playerId];
+          if (!target || target.team !== assigner.team) break;
+          if (!state.songpop.assignments[assigner.team])
+            state.songpop.assignments[assigner.team] = {};
+          if (category === null) {
+            delete state.songpop.assignments[assigner.team][playerId];
+          } else {
+            state.songpop.assignments[assigner.team][playerId] = category;
+          }
           broadcastAll();
           break;
         }
@@ -472,32 +476,13 @@ const server = Bun.serve({
         case 'host_start_songpop': {
           if (client.role !== 'host') break;
           state.phase = 'songpop';
-          state.songpop = { votes: {}, reps: {}, locked: false, placements: {}, awarded: false };
+          state.songpop = { assignments: {}, locked: false, placements: {}, awarded: false };
           broadcastAll();
           break;
         }
 
         case 'host_songpop_lock': {
           if (client.role !== 'host') break;
-          // Tally votes per team and resolve ties randomly
-          TEAMS.forEach(team => {
-            const members = Object.values(state.players).filter(p => p.team === team.id);
-            const tally = {};
-            for (const memberId of members.map(p => p.id)) {
-              const pick = state.songpop.votes[memberId];
-              if (pick) tally[pick] = (tally[pick] || 0) + 1;
-            }
-            const candidates = Object.keys(tally);
-            if (candidates.length === 0) {
-              // no votes cast — pick random member
-              if (members.length > 0)
-                state.songpop.reps[team.id] = members[Math.floor(Math.random() * members.length)].id;
-            } else {
-              const max = Math.max(...Object.values(tally));
-              const tied = candidates.filter(id => tally[id] === max);
-              state.songpop.reps[team.id] = tied[Math.floor(Math.random() * tied.length)];
-            }
-          });
           state.songpop.locked = true;
           broadcastAll();
           break;
@@ -557,7 +542,7 @@ const server = Bun.serve({
             const s2 = [...TEAMS].sort(() => Math.random() - 0.5);
             state.lipsync = { subPhase: 'reveal', groupA: s2.slice(0,4).map(t=>t.id), groupB: s2.slice(4).map(t=>t.id), songA: null, songB: null, ranksA: {}, ranksB: {}, scoresA: null, scoresB: null };
           } else if (msg.phase === 'songpop') {
-            state.songpop = { votes: {}, reps: {}, locked: false, placements: {}, awarded: false };
+            state.songpop = { assignments: {}, locked: false, placements: {}, awarded: false };
           }
           broadcastAll();
           break;

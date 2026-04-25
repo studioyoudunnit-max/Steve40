@@ -89,5 +89,11 @@ export const LIPSYNC_SONGS = [
   { title: 'Total Eclipse of the Heart', artist: 'Bonnie Tyler' },
 ];
 
+export const SONGPOP_CATEGORIES = [
+  { key: 'country', label: 'Modern Country',  emoji: '🤠' },
+  { key: '2010s',   label: 'Essential 2010s', emoji: '✨' },
+  { key: 'intros',  label: 'Just the Intros', emoji: '⚡' },
+];
+
 export const ROOM_CODE = 'TEA40';
 export const JOIN_URL  = 'steave-40.fly.dev';

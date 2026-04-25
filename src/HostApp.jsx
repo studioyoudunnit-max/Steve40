@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { play } from './sounds.js';
 import { useGame } from './useGame.js';
-import { TEAMS, TRIVIA_QS, CELEB_ROUNDS, LIPSYNC_SONGS } from './constants.js';
+import { TEAMS, TRIVIA_QS, CELEB_ROUNDS, LIPSYNC_SONGS, SONGPOP_CATEGORIES } from './constants.js';
 import {
   Logo, MiniLogo, Btn, Card, Stage, GameHeader,
   TimerBar, Confetti, PointsPop, TeamDot, TeamChip, TeamOrb, BeatPulse, QRPlaceholder,
@@ -952,55 +952,80 @@ const SONGPOP_PRIZES = { 1: 10000, 2: 7000, 3: 4500, 4: 2500, 5: 1200, 6: 600, 7
 const PLACE_LABELS = ['', '🥇 1st', '🥈 2nd', '🥉 3rd', '4th', '5th', '6th', '7th', '8th'];
 
 function ChampionRevealModal({ songpop, players, onContinue }) {
-  const reps = TEAMS.map((team, i) => ({
-    team,
-    rep: players.find(p => p.id === songpop.reps[team.id]),
-    delay: i * 0.11,
-  }));
+  // stagger: categories first (3 columns), then team rows
+  const totalCards = SONGPOP_CATEGORIES.length + TEAMS.length;
 
   return (
     <div style={{
       width: '100%', height: '100%',
-      background: 'radial-gradient(ellipse at 50% 30%, #1a0838 0%, #06030f 100%)',
+      background: 'radial-gradient(ellipse at 50% 25%, #1a0838 0%, #06030f 100%)',
       display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      gap: 36, padding: '40px 48px',
+      alignItems: 'center',
+      gap: 0, padding: '28px 40px 32px',
+      overflowY: 'auto',
       animation: 'float-up .3s ease-out',
     }}>
-      <div style={{ textAlign: 'center', animation: 'float-up .3s ease-out' }}>
-        <div className="mono" style={{ fontSize: '.7rem', color: 'var(--accent-4)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8 }}>Songpop Duel</div>
-        <div className="display" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'var(--text)', lineHeight: 1 }}>Your Champions</div>
+      <div style={{ textAlign: 'center', marginBottom: 24, animation: 'float-up .3s ease-out' }}>
+        <div className="mono" style={{ fontSize: '.7rem', color: 'var(--accent-4)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6 }}>Songpop Duel</div>
+        <div className="display" style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)', color: 'var(--text)', lineHeight: 1 }}>Team Lineups</div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, maxWidth: 960, width: '100%' }}>
-        {reps.map(({ team, rep, delay }) => (
-          <div key={team.id} style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-            padding: '22px 16px',
-            background: `color-mix(in oklab, ${team.color} 12%, rgba(255,255,255,.03))`,
-            border: `2px solid color-mix(in oklab, ${team.color} 45%, transparent)`,
-            borderRadius: 20,
-            boxShadow: `0 0 30px color-mix(in oklab, ${team.color} 15%, transparent)`,
-            animation: `float-up .45s ${delay}s ease-out both`,
+      {/* Category header row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '160px repeat(3, 1fr)', gap: 10, maxWidth: 1080, width: '100%', marginBottom: 10 }}>
+        <div /> {/* team name column spacer */}
+        {SONGPOP_CATEGORIES.map((cat, i) => (
+          <div key={cat.key} style={{
+            textAlign: 'center', padding: '12px 8px',
+            background: 'rgba(255,255,255,.05)',
+            border: '1px solid rgba(255,255,255,.1)',
+            borderRadius: 14,
+            animation: `float-up .4s ${i * 0.1}s ease-out both`,
           }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
-              background: `linear-gradient(135deg, ${team.color}, color-mix(in oklab, ${team.color} 50%, var(--accent-2)))`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.6rem', fontFamily: 'var(--font-display)', fontWeight: 800, color: '#fff',
-              boxShadow: `0 0 24px color-mix(in oklab, ${team.color} 55%, transparent)`,
-            }}>
-              {rep?.name?.[0] ?? '?'}
-            </div>
-            <div style={{ fontWeight: 800, color: team.color, fontSize: '.78rem', letterSpacing: 1, textTransform: 'uppercase' }}>{team.name}</div>
-            <div className="display" style={{ fontSize: '1.1rem', color: 'var(--text)', textAlign: 'center', lineHeight: 1.15 }}>
-              {rep?.name ?? '—'}
-            </div>
+            <div style={{ fontSize: '1.6rem', marginBottom: 4 }}>{cat.emoji}</div>
+            <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: '.85rem' }}>{cat.label}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ animation: `float-up .4s ${TEAMS.length * 0.11 + 0.3}s ease-out both` }}>
+      {/* Team rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1080, width: '100%' }}>
+        {TEAMS.map((team, ti) => {
+          const teamAssignments = songpop.assignments?.[team.id] || {};
+          return (
+            <div key={team.id} style={{
+              display: 'grid', gridTemplateColumns: '160px repeat(3, 1fr)', gap: 10,
+              animation: `float-up .4s ${(SONGPOP_CATEGORIES.length * 0.1) + ti * 0.08 + 0.1}s ease-out both`,
+            }}>
+              {/* Team name */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: `color-mix(in oklab, ${team.color} 10%, transparent)`, border: `1.5px solid color-mix(in oklab, ${team.color} 35%, transparent)`, borderRadius: 12 }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: team.color, flexShrink: 0 }} />
+                <span style={{ fontWeight: 800, color: team.color, fontSize: '.85rem' }}>{team.name}</span>
+              </div>
+              {/* Category cells */}
+              {SONGPOP_CATEGORIES.map(cat => {
+                const assigned = Object.values(players)
+                  .filter(p => p.team === team.id && teamAssignments[p.id] === cat.key);
+                return (
+                  <div key={cat.key} style={{
+                    padding: '8px 10px', borderRadius: 12, minHeight: 48,
+                    background: assigned.length ? `color-mix(in oklab, ${team.color} 12%, rgba(255,255,255,.04))` : 'rgba(255,255,255,.02)',
+                    border: `1px solid ${assigned.length ? `color-mix(in oklab, ${team.color} 30%, transparent)` : 'rgba(255,255,255,.06)'}`,
+                    display: 'flex', flexWrap: 'wrap', alignContent: 'center', gap: 4,
+                  }}>
+                    {assigned.length === 0
+                      ? <span style={{ fontSize: '.72rem', color: 'var(--dim)', fontStyle: 'italic' }}>—</span>
+                      : assigned.map(p => (
+                          <span key={p.id} style={{ fontSize: '.8rem', fontWeight: 700, color: team.color, background: `color-mix(in oklab, ${team.color} 16%, transparent)`, padding: '2px 8px', borderRadius: 99 }}>{p.name}</span>
+                        ))}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ marginTop: 24, animation: `float-up .4s ${totalCards * 0.09 + 0.3}s ease-out both` }}>
         <Btn kind="primary" size="md" onClick={onContinue} icon="ic-arrow-right">
           Start Tournament →
         </Btn>
@@ -1042,50 +1067,44 @@ function HostSongpop({ state, send }) {
       <Stage>
         <GameHeader
           title="Songpop Duel"
-          subtitle="Players pick their team champion on their phones"
+          subtitle="Players assign teammates to song categories on their phones"
           accent="var(--accent-4)"
         />
         <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Card style={{ padding: '16px 22px', display: 'flex', alignItems: 'center', gap: 14, background: 'color-mix(in oklab, var(--accent-4) 8%, var(--card))' }}>
             <svg width="20" height="20" style={{ color: 'var(--accent-4)', flexShrink: 0 }}><use href="#ic-info" /></svg>
             <div style={{ fontSize: '.9rem', color: 'var(--text-2)' }}>
-              <strong style={{ color: 'var(--accent-4)' }}>IRL tournament.</strong> Each team votes for their rep on their phone. Lock them in, run the Songpop bracket, then come back to award places.
+              <strong style={{ color: 'var(--accent-4)' }}>IRL tournament.</strong> Each team assigns their players to the three song categories on their phones. Lock the lineups, run the Songpop bracket, then come back to award places.
             </div>
           </Card>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, flex: 1 }}>
             {TEAMS.map(team => {
               const teamPlayers = players.filter(p => p.team === team.id);
-              const votedCount = teamPlayers.filter(p => songpop.votes?.[p.id]).length;
+              const teamAssignments = songpop.assignments?.[team.id] || {};
+              const assignedCount = teamPlayers.filter(p => teamAssignments[p.id]).length;
+              const allAssigned = teamPlayers.length > 0 && assignedCount === teamPlayers.length;
               return (
-                <Card key={team.id} style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <TeamDot team={team} size={14} />
-                    <div style={{ fontWeight: 800, color: team.color, fontSize: '.9rem' }}>{team.name} Team</div>
-                  </div>
-                  <div style={{ padding: '14px 12px', background: `color-mix(in oklab, ${team.color} 14%, transparent)`, border: `1px solid color-mix(in oklab, ${team.color} 30%, transparent)`, borderRadius: 12, textAlign: 'center' }}>
-                    <div style={{ width: 48, height: 48, margin: '0 auto 8px', borderRadius: '50%', background: `color-mix(in oklab, ${team.color} 30%, #222)`, border: `2px dashed color-mix(in oklab, ${team.color} 50%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: team.color }}>
-                      ?
+                <Card key={team.id} style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <TeamDot team={team} size={12} />
+                    <div style={{ fontWeight: 800, color: team.color, fontSize: '.85rem', flex: 1 }}>{team.name}</div>
+                    <div className="mono" style={{ fontSize: '.6rem', color: allAssigned ? '#00e676' : 'var(--muted)', letterSpacing: 1 }}>
+                      {assignedCount}/{teamPlayers.length}
                     </div>
-                    <div className="display" style={{ fontSize: '1rem', color: 'var(--muted)' }}>Voting…</div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {teamPlayers.map(p => {
-                      const hasVoted = !!songpop.votes?.[p.id];
-                      return (
-                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 9px', background: hasVoted ? `color-mix(in oklab, ${team.color} 10%, transparent)` : 'rgba(255,255,255,.02)', border: `1px solid ${hasVoted ? `color-mix(in oklab, ${team.color} 35%, transparent)` : 'var(--border-2)'}`, borderRadius: 9, fontSize: '.8rem', color: 'var(--text)' }}>
-                          <div style={{ width: 20, height: 20, borderRadius: '50%', background: team.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{p.name[0]}</div>
-                          <span style={{ flex: 1 }}>{p.name}</span>
-                          {hasVoted
-                            ? <svg width="12" height="12" style={{ color: team.color }}><use href="#ic-check" /></svg>
-                            : <span style={{ fontSize: '.65rem', color: 'var(--muted)' }}>…</span>}
-                        </div>
-                      );
-                    })}
-                    {teamPlayers.length === 0 && <div style={{ color: 'var(--muted)', fontSize: '.75rem', fontStyle: 'italic', padding: '4px 9px' }}>No players yet</div>}
-                  </div>
-                  <div className="mono" style={{ fontSize: '.65rem', color: votedCount === teamPlayers.length && teamPlayers.length > 0 ? '#00e676' : 'var(--muted)', textAlign: 'center', letterSpacing: 1 }}>
-                    {votedCount} / {teamPlayers.length} voted
-                  </div>
+                  {/* Category mini-rows */}
+                  {SONGPOP_CATEGORIES.map(cat => {
+                    const inCat = teamPlayers.filter(p => teamAssignments[p.id] === cat.key);
+                    return (
+                      <div key={cat.key} style={{ padding: '5px 8px', background: inCat.length ? `color-mix(in oklab, ${team.color} 10%, transparent)` : 'rgba(255,255,255,.02)', border: `1px solid ${inCat.length ? `color-mix(in oklab, ${team.color} 25%, transparent)` : 'var(--border-2)'}`, borderRadius: 8 }}>
+                        <div style={{ fontSize: '.6rem', color: 'var(--muted)', fontWeight: 700, marginBottom: inCat.length ? 3 : 0 }}>{cat.emoji} {cat.label}</div>
+                        {inCat.length > 0 && (
+                          <div style={{ fontSize: '.72rem', color: team.color, fontWeight: 700 }}>{inCat.map(p => p.name).join(', ')}</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {teamPlayers.length === 0 && <div style={{ color: 'var(--muted)', fontSize: '.72rem', fontStyle: 'italic' }}>No players</div>}
                 </Card>
               );
             })}
